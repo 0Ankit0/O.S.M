@@ -10,9 +10,8 @@ import type { PaymentProvider } from '@/types';
 /**
  * Handles payment provider callbacks.
  *
- * Khalti redirect params: ?status=Completed&transaction_id=...&tidx=...&amount=...&mobile=...&purchase_order_id=...&purchase_order_name=...&pidx=...
- * eSewa redirect params:  ?data=BASE64_ENCODED_RESPONSE&provider=esewa
- * Generic:                ?provider=stripe|paypal&transaction_id=...
+ * Stripe redirect params: ?provider=stripe&transaction_id=...
+ * PayPal redirect params:  ?provider=paypal&transaction_id=...
  */
 function PaymentCallbackInner() {
   const searchParams = useSearchParams();
@@ -23,18 +22,18 @@ function PaymentCallbackInner() {
   const verifyPayment = useVerifyPayment();
 
   useEffect(() => {
-    const provider = (searchParams.get('provider') || 'khalti') as PaymentProvider;
-    const pidx = searchParams.get('pidx') ?? undefined;
+    const provider = (searchParams.get('provider') || 'stripe') as PaymentProvider;
     const data = searchParams.get('data') ?? undefined;
+    const transaction_id = searchParams.get('transaction_id') ?? undefined;
 
-    if (!pidx && !data) {
+    if (!transaction_id && !data) {
       setStatus('error');
       setMessage('Missing payment verification data in URL.');
       return;
     }
 
     verifyPayment.mutate(
-      { provider, pidx, data },
+      { provider, transaction_id, data },
       {
         onSuccess: (result) => {
           if (result.status === 'completed') {

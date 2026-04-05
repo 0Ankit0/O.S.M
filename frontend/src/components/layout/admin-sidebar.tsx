@@ -4,20 +4,20 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
-  Radar,
-  ShieldAlert,
-  Users,
-  Shield,
+  Package,
+  ClipboardList,
+  Truck,
+  RotateCcw,
   ArrowLeft,
 } from 'lucide-react';
 import { OrgSwitcher } from './org-switcher';
 
 const adminNavigation = [
   { name: 'Admin Dashboard', href: '/admin/dashboard', icon: LayoutDashboard },
-  { name: 'Logs', href: '/admin/logs', icon: Radar },
-  { name: 'Security Review', href: '/admin/security-review', icon: ShieldAlert },
-  { name: 'Manage Users', href: '/admin/users', icon: Users },
-  { name: 'Roles & Permissions', href: '/admin/rbac', icon: Shield },
+  { name: 'Menu Management', href: '/admin/menu', icon: Package },
+  { name: 'Operations', href: '/admin/operations', icon: ClipboardList },
+  { name: 'Deliveries', href: '/admin/deliveries', icon: Truck },
+  { name: 'Returns', href: '/admin/returns', icon: RotateCcw },
 ];
 
 export function AdminSidebar() {
@@ -27,7 +27,7 @@ export function AdminSidebar() {
     <aside className="fixed inset-y-0 left-0 z-10 w-64 bg-white border-r border-gray-200">
       <div className="flex h-16 items-center justify-center border-b border-gray-200">
         <Link href="/admin/dashboard" className="text-xl font-bold text-blue-600">
-          Admin Panel
+          Restaurant Ops
         </Link>
       </div>
       <OrgSwitcher />

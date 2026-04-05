@@ -7,6 +7,7 @@ The project is designed so that most customization starts with configuration and
 ## What It Includes
 
 - Config-driven modules for auth, multi-tenancy, notifications, websockets, finance, analytics, and social auth.
+- Registry-based analytics adapters for backend, web, and mobile so providers such as PostHog or Mixpanel can be swapped by configuration.
 - Communications provider switching for email, push, and SMS.
 - Runtime discovery APIs for clients and operators.
 - Database-backed runtime settings overrides for safe operational config.

@@ -1,51 +1,53 @@
 'use client';
 
 import { useAuthStore } from '@/store/auth-store';
-import { useNotifications } from '@/hooks/use-notifications';
-import { useTokens } from '@/hooks/use-tokens';
+import { useOmsCart, useOmsOrders, useOmsProducts } from '@/hooks/use-oms';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Bell, Shield, Key, AlertTriangle } from 'lucide-react';
+import { Package, ShoppingCart, Truck, AlertTriangle } from 'lucide-react';
 import Link from 'next/link';
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
-  const { data: notifData, isLoading: loadingNotifs } = useNotifications({ limit: 5 });
-  const { data: tokenData } = useTokens({ limit: 1 });
+  const { data: cart } = useOmsCart();
+  const { data: ordersPage } = useOmsOrders();
+  const { data: productsPage } = useOmsProducts({ limit: 4, sort: 'newest' });
 
-  const recentNotifs = notifData?.items ?? [];
-  const unreadCount = notifData?.unread_count ?? 0;
-  const activeSessions = tokenData?.total ?? 0;
+  const orders = ordersPage?.items ?? [];
+  const activeOrders = orders.filter((order) => !['delivered', 'cancelled', 'refunded'].includes(order.status)).length;
+  const deliveredOrders = orders.filter((order) => order.status === 'delivered').length;
+  const cartItems = cart?.items.reduce((sum, item) => sum + item.quantity, 0) ?? 0;
+  const featuredProducts = productsPage?.items ?? [];
 
   const stats = [
     {
-      name: 'Unread Notifications',
-      value: String(unreadCount),
-      icon: Bell,
-      href: '/notifications',
+      name: 'Items In Cart',
+      value: String(cartItems),
+      icon: ShoppingCart,
+      href: '/cart',
+      color: 'text-emerald-600 bg-emerald-50',
+    },
+    {
+      name: 'Active Orders',
+      value: String(activeOrders),
+      icon: Truck,
+      href: '/orders',
       color: 'text-blue-600 bg-blue-50',
     },
     {
-      name: 'Active Sessions',
-      value: String(activeSessions),
-      icon: Key,
-      href: '/tokens',
+      name: 'Delivered Orders',
+      value: String(deliveredOrders),
+      icon: Package,
+      href: '/orders',
       color: 'text-purple-600 bg-purple-50',
-    },
-    {
-      name: '2FA Status',
-      value: user?.otp_enabled ? 'Enabled' : 'Disabled',
-      icon: Shield,
-      href: '/profile',
-      color: user?.otp_enabled ? 'text-green-600 bg-green-50' : 'text-yellow-600 bg-yellow-50',
     },
   ];
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+        <h1 className="text-2xl font-bold text-gray-900">Order Workspace</h1>
         <p className="text-gray-500">
-          Welcome back{user?.first_name ? `, ${user.first_name}` : user?.username ? `, ${user.username}` : ''}!
+          Welcome back{user?.first_name ? `, ${user.first_name}` : user?.username ? `, ${user.username}` : ''}. Track orders, manage your cart, and place your next purchase.
         </p>
       </div>
 
@@ -73,43 +75,38 @@ export default function DashboardPage() {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2">
-              <Bell className="h-5 w-5" />
-              Recent Notifications
+              <Package className="h-5 w-5" />
+              Recently Added Products
             </CardTitle>
-            <Link href="/notifications" className="text-sm text-blue-600 hover:underline">
-              View all
+            <Link href="/shop" className="text-sm text-blue-600 hover:underline">
+              Browse catalog
             </Link>
           </CardHeader>
           <CardContent>
-            {loadingNotifs ? (
+            {!productsPage ? (
               <div className="space-y-3">
                 {[1, 2, 3].map((i) => (
                   <div key={i} className="h-12 bg-gray-100 rounded animate-pulse" />
                 ))}
               </div>
-            ) : recentNotifs.length === 0 ? (
+            ) : featuredProducts.length === 0 ? (
               <div className="text-center py-8">
-                <Bell className="h-8 w-8 text-gray-300 mx-auto mb-2" />
-                <p className="text-sm text-gray-500">No notifications yet</p>
+                <Package className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+                <p className="text-sm text-gray-500">No products have been published yet</p>
               </div>
             ) : (
               <div className="space-y-3">
-                {recentNotifs.map((n) => (
+                {featuredProducts.map((product) => (
                   <div
-                    key={n.id}
-                    className={`flex items-start gap-3 p-3 rounded-lg ${n.is_read ? '' : 'bg-blue-50'}`}
+                    key={product.id}
+                    className="flex items-start gap-3 p-3 rounded-lg bg-slate-50"
                   >
-                    <div
-                      className={`mt-0.5 h-2 w-2 rounded-full flex-shrink-0 ${
-                        n.is_read ? 'bg-gray-300' : 'bg-blue-500'
-                      }`}
-                    />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900 truncate">{n.title}</p>
-                      <p className="text-xs text-gray-500 truncate">{n.body}</p>
+                      <p className="text-sm font-medium text-gray-900 truncate">{product.title}</p>
+                      <p className="text-xs text-gray-500 truncate">{product.description || 'Fresh catalog item available now'}</p>
                     </div>
-                    <span className="text-xs text-gray-400 flex-shrink-0">
-                      {new Date(n.created_at).toLocaleDateString()}
+                    <span className="text-xs font-medium text-gray-600 flex-shrink-0">
+                      {product.currency} {product.base_price.toFixed(0)}
                     </span>
                   </div>
                 ))}
@@ -125,9 +122,10 @@ export default function DashboardPage() {
           <CardContent>
             <div className="grid grid-cols-2 gap-3">
               {[
-                { href: '/profile', icon: Shield, label: 'Security Settings', desc: 'Manage 2FA & password', color: 'text-blue-600' },
-                { href: '/tokens', icon: Key, label: 'Active Sessions', desc: 'View & revoke sessions', color: 'text-purple-600' },
-                { href: '/notifications', icon: Bell, label: 'Notifications', desc: `${unreadCount} unread`, color: 'text-orange-600' },
+                { href: '/shop', icon: Package, label: 'Browse Catalog', desc: 'Discover products and variants', color: 'text-blue-600' },
+                { href: '/cart', icon: ShoppingCart, label: 'Review Cart', desc: `${cartItems} items waiting`, color: 'text-purple-600' },
+                { href: '/orders', icon: Truck, label: 'Track Orders', desc: `${activeOrders} active shipments`, color: 'text-orange-600' },
+                { href: '/profile', icon: AlertTriangle, label: 'Profile & Delivery', desc: 'Keep your account ready for checkout', color: 'text-emerald-600' },
               ].map((item) => (
                 <Link
                   key={item.href}
@@ -162,24 +160,24 @@ export default function DashboardPage() {
         </Card>
       )}
 
-      {!user?.otp_enabled && (
+      {!cart?.items.length && (
         <Card className="border-orange-200 bg-orange-50">
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div className="flex items-start gap-3">
-                <Shield className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
+                <ShoppingCart className="h-5 w-5 text-orange-600 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-orange-800">Two-factor authentication is disabled</p>
+                  <p className="text-sm font-medium text-orange-800">Your cart is empty</p>
                   <p className="text-xs text-orange-700 mt-1">
-                    Enable 2FA to add an extra layer of security to your account.
+                    Add a few products to start the order-to-delivery flow.
                   </p>
                 </div>
               </div>
               <Link
-                href="/profile"
+                href="/shop"
                 className="text-sm font-medium text-orange-700 hover:text-orange-900 underline flex-shrink-0"
               >
-                Enable 2FA
+                Shop now
               </Link>
             </div>
           </CardContent>

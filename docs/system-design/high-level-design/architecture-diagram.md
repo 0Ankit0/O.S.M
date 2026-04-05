@@ -2,156 +2,101 @@
 
 ## Overview
 
-This document presents the AWS solution architecture for the Order Management and Delivery System, showing all major components, their interactions, and the technology choices.
+This document describes the shipped application architecture for the restaurant-focused Order Management System. The implementation is built around a single FastAPI backend, a Next.js web application, and a Flutter mobile application. Cloud vendors remain optional deployment targets and provider integrations, not the source of truth for runtime design.
 
 ## Solution Architecture
 
 ```mermaid
 graph TB
     subgraph Clients["Client Applications"]
-        CWeb["Customer Web SPA<br/>(React on CloudFront)"]
-        SMob["Staff Mobile App<br/>(React Native)"]
-        Admin["Admin Portal<br/>(React on CloudFront)"]
+        Web["Next.js Web App<br/>customer + admin/ops"]
+        Mobile["Flutter Mobile App<br/>customer-first flows"]
     end
 
-    subgraph Edge["Edge Layer"]
-        CF["Amazon CloudFront<br/>CDN + SPA hosting"]
-        WAF["AWS WAF<br/>OWASP Top 10 protection"]
-        APIGW["Amazon API Gateway<br/>REST APIs, JWT validation,<br/>rate limiting, usage plans"]
+    subgraph API["Application Layer"]
+        FastAPI["FastAPI Backend<br/>/api/v1"]
+        WS["WebSocket / notifications"]
+        Celery["Celery Workers<br/>async jobs"]
     end
 
-    subgraph Auth["Authentication"]
-        COG["Amazon Cognito<br/>User pools, MFA, RBAC"]
+    subgraph Domain["OMS Modules"]
+        IAM["IAM / Auth / RBAC"]
+        Catalog["Catalog<br/>categories · products · variants"]
+        Commerce["Commerce<br/>cart · addresses · checkout · coupons"]
+        Orders["Orders<br/>state machine · milestones · idempotency"]
+        Ops["Operations<br/>warehouses · fulfillment · deliveries · returns"]
+        Analytics["Analytics Abstraction<br/>provider-agnostic events"]
+        Comms["Communications<br/>email · sms · push"]
     end
 
-    subgraph Compute["Compute Layer"]
-        subgraph Lambda["AWS Lambda Functions"]
-            LOrder["Order Service"]
-            LPayment["Payment Service"]
-            LInventory["Inventory Service"]
-            LNotif["Notification Service"]
-            LSearch["Search Sync Service"]
-        end
-        subgraph Fargate["AWS Fargate Services"]
-            FFulfill["Fulfillment Service"]
-            FDelivery["Delivery Service"]
-            FReturn["Return Service"]
-            FAnalytics["Analytics Service"]
-        end
+    subgraph Data["Core Data"]
+        PG[("PostgreSQL<br/>canonical business data")]
+        Redis[("Redis<br/>cache · idempotency · hot-path state")]
+        ObjectStore[("Local / S3-compatible storage<br/>images · POD · exports")]
     end
 
-    subgraph EventDriven["Event-Driven Layer"]
-        EB["Amazon EventBridge<br/>Custom event bus: oms.events"]
-        SF["AWS Step Functions<br/>Fulfillment orchestration,<br/>return processing"]
-        DLQ["Amazon SQS<br/>Dead letter queues"]
+    subgraph Providers["Optional Providers"]
+        Payments["Payments<br/>Stripe · Khalti · eSewa · PayPal · COD"]
+        Notify["Notifications<br/>SMTP · Resend · SES · Twilio · FCM"]
+        AnalyticsProviders["Analytics<br/>PostHog · Mixpanel · future adapters"]
+        Maps["Maps / geocoding"]
     end
 
-    subgraph Data["Data Layer"]
-        RDS["Amazon RDS<br/>PostgreSQL 15 Multi-AZ<br/>(Orders, Products, Staff)"]
-        RR["RDS Read Replica<br/>(Reporting, Analytics)"]
-        DDB["Amazon DynamoDB<br/>(Cart, Milestones, Sessions)"]
-        REDIS["Amazon ElastiCache<br/>Redis Cluster<br/>(Cache, Idempotency, Rate Limit)"]
-        OS["Amazon OpenSearch<br/>(Product Search, Order Search)"]
-    end
+    Web --> FastAPI
+    Web --> WS
+    Mobile --> FastAPI
+    Mobile --> WS
 
-    subgraph Storage["Storage Layer"]
-        S3["Amazon S3<br/>(POD photos, product images,<br/>invoices, reports)"]
-    end
+    FastAPI --> IAM
+    FastAPI --> Catalog
+    FastAPI --> Commerce
+    FastAPI --> Orders
+    FastAPI --> Ops
+    FastAPI --> Analytics
+    FastAPI --> Comms
 
-    subgraph Notifications["Notification Channels"]
-        SES["Amazon SES<br/>(Email)"]
-        SNS["Amazon SNS<br/>(SMS)"]
-        PIN["Amazon Pinpoint<br/>(Push)"]
-    end
+    Catalog --> PG
+    Commerce --> PG
+    Orders --> PG
+    Ops --> PG
+    IAM --> PG
 
-    subgraph Monitoring["Observability"]
-        CW["Amazon CloudWatch<br/>(Metrics, Logs, Alarms)"]
-        XR["AWS X-Ray<br/>(Distributed Tracing)"]
-        AC["AWS AppConfig<br/>(Feature Flags)"]
-    end
+    Commerce --> Redis
+    Orders --> Redis
+    Ops --> Redis
 
-    subgraph CI_CD["CI/CD"]
-        CP["AWS CodePipeline"]
-        CB["AWS CodeBuild"]
-        CDK["AWS CDK<br/>(Infrastructure as Code)"]
-    end
+    Ops --> ObjectStore
+    Orders --> Celery
+    Ops --> Celery
+    Comms --> Celery
 
-    CWeb --> CF
-    Admin --> CF
-    SMob --> APIGW
-    CF --> WAF --> APIGW
-    APIGW --> COG
-    APIGW --> Lambda
-    APIGW --> Fargate
-
-    LOrder --> RDS
-    LOrder --> DDB
-    LOrder --> REDIS
-    LOrder --> EB
-
-    LPayment --> RDS
-    LPayment --> EB
-
-    LInventory --> RDS
-    LInventory --> REDIS
-    LInventory --> EB
-
-    LNotif --> SES
-    LNotif --> SNS
-    LNotif --> PIN
-
-    LSearch --> OS
-
-    FFulfill --> RDS
-    FFulfill --> EB
-    FFulfill --> SF
-
-    FDelivery --> RDS
-    FDelivery --> DDB
-    FDelivery --> S3
-    FDelivery --> EB
-
-    FReturn --> RDS
-    FReturn --> EB
-
-    FAnalytics --> RR
-    FAnalytics --> OS
-
-    EB --> Lambda
-    EB --> Fargate
-    EB --> DLQ
-
-    SF --> Lambda
-
-    RDS --> RR
-
-    CP --> CB --> CDK
+    Orders --> Payments
+    Comms --> Notify
+    Analytics --> AnalyticsProviders
+    Ops --> Maps
 ```
 
-## Component Responsibilities
+## Module Responsibilities
 
-| Component | Technology | Responsibilities |
+| Module | Runtime | Responsibilities |
 |---|---|---|
-| API Gateway | Amazon API Gateway | Request routing, JWT validation via Cognito authorizer, rate limiting, request/response transformation |
-| Order Service | Lambda | Order CRUD, state machine transitions, idempotency enforcement, milestone recording |
-| Payment Service | Lambda | Payment capture via gateway, refund processing, reconciliation report generation |
-| Inventory Service | Lambda | Stock reservation/release, quantity adjustments, low-stock alerting |
-| Notification Service | Lambda | Template rendering, multi-channel dispatch (SES/SNS/Pinpoint), delivery tracking |
-| Search Sync Service | Lambda | DynamoDB Streams / EventBridge consumer syncing product data to OpenSearch |
-| Fulfillment Service | Fargate | Pick-pack workflow management, barcode validation, manifest generation |
-| Delivery Service | Fargate | Delivery assignment, status tracking, POD management, failed delivery handling |
-| Return Service | Fargate | Return eligibility, pickup assignment, inspection result processing |
-| Analytics Service | Fargate | Dashboard aggregation, report generation, KPI calculation |
+| Web App | Next.js | Restaurant storefront, customer account flows, admin and operations dashboards |
+| Mobile App | Flutter | Customer menu browsing, cart, checkout, orders, profile, addresses |
+| FastAPI Backend | Python / FastAPI | Public API, OMS domain logic, auth, RBAC, validation, orchestration |
+| Celery Workers | Python / Celery | Reservation expiry, notifications, exports, reconciliation, deferred operations |
+| PostgreSQL | SQLModel / PostgreSQL | System of record for customers, catalog, orders, fulfillment, delivery, returns |
+| Redis | Redis | Idempotency keys, lightweight coordination, cached hot-path data |
+| Object Storage | Local or S3-compatible | Product images, proof-of-delivery artifacts, generated exports |
 
 ## Cross-Cutting Concerns
 
 | Concern | Implementation |
 |---|---|
-| Authentication | Cognito user pools with JWT; separate pools for customers and staff |
-| Authorization | Cognito groups mapped to IAM roles; API Gateway authorizer enforces RBAC |
-| Encryption in Transit | TLS 1.3 everywhere; API Gateway terminates TLS; internal calls use VPC endpoints |
-| Encryption at Rest | RDS encryption (KMS), DynamoDB encryption, S3 SSE-S3, ElastiCache encryption |
-| Logging | Structured JSON via CloudWatch Logs; correlation_id propagated across services |
-| Tracing | X-Ray SDK in all Lambda/Fargate; trace segments for external calls |
-| Feature Flags | AppConfig with deployment strategy for gradual rollouts |
-| Secrets | AWS Secrets Manager for database credentials and API keys |
+| Authentication | FastAPI JWT/session model with existing auth module and optional OTP/social login |
+| Authorization | Role-based access enforced in FastAPI and reflected in web/mobile route handling |
+| Idempotency | `Idempotency-Key` on OMS mutations, backed by Redis and persisted OMS state |
+| State Management | Explicit order, fulfillment, delivery, and return transitions in the OMS service layer |
+| Analytics | Provider-agnostic adapter layer for backend, web, and mobile |
+| Notifications | Provider abstraction for email, SMS, push, and in-app delivery |
+| Storage | Local-first object storage with S3-compatible deployment option |
+| Observability | Structured logging, metrics, and analytics/reporting endpoints inside the app stack |

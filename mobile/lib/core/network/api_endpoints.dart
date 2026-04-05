@@ -48,4 +48,14 @@ class ApiEndpoints {
   static const String paymentProviders = '/payments/providers/';
   static const String paymentInitiate = '/payments/initiate/';
   static const String paymentVerify = '/payments/verify/';
+
+  // OMS
+  static const String omsCategories = '/categories';
+  static const String omsProducts = '/products';
+  static const String omsCart = '/cart/';
+  static const String omsCartItems = '/cart/items';
+  static String omsCartItemById(int id) => '/cart/items/$id';
+  static const String omsAddresses = '/addresses/';
+  static const String omsOrders = '/orders/';
+  static const String omsCheckout = '/orders/checkout';
 }

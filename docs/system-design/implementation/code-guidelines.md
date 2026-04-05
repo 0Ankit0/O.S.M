@@ -4,6 +4,8 @@
 
 Development standards, conventions, and best practices for the Order Management and Delivery System (OMS) codebase. The OMS is an AWS-native monorepo using Lambda + Fargate hybrid compute, PostgreSQL 15 on RDS, DynamoDB, EventBridge, Cognito, ElastiCache Redis, OpenSearch, and S3.
 
+Analytics integrations must follow the provider-agnostic adapter pattern documented in `analytics-architecture.md`. Feature code should depend on the analytics service contract only, never directly on a vendor SDK.
+
 ---
 
 ## Technology Stack

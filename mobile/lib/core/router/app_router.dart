@@ -8,6 +8,10 @@ import '../../features/auth/presentation/pages/reset_password_page.dart';
 import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/home/presentation/pages/home_page.dart';
 import '../../features/notifications/presentation/pages/notifications_page.dart';
+import '../../features/oms/presentation/pages/cart_page.dart';
+import '../../features/oms/presentation/pages/addresses_page.dart';
+import '../../features/oms/presentation/pages/orders_page.dart';
+import '../../features/oms/presentation/pages/shop_page.dart';
 import '../../features/payments/presentation/pages/payments_page.dart';
 import '../../features/profile/presentation/pages/profile_page.dart';
 import '../../features/profile/presentation/pages/tokens_page.dart';
@@ -26,7 +30,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       if (isLoading) return null;
 
-      final onAuthPage = location == AppConstants.loginRoute ||
+      final onAuthPage =
+          location == AppConstants.loginRoute ||
           location == AppConstants.registerRoute ||
           location == AppConstants.forgotPasswordRoute ||
           location == AppConstants.resetPasswordRoute ||
@@ -35,8 +40,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       if (!isAuthenticated && !onAuthPage) {
         return AppConstants.loginRoute;
       }
-      if (isAuthenticated && (location == AppConstants.loginRoute ||
-          location == AppConstants.registerRoute)) {
+      if (isAuthenticated &&
+          (location == AppConstants.loginRoute ||
+              location == AppConstants.registerRoute)) {
         return AppConstants.homeRoute;
       }
       return null;
@@ -64,8 +70,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppConstants.resetPasswordRoute,
         builder: (context, state) {
-          final token = state.extra as String? ??
-              state.uri.queryParameters['token'] ?? '';
+          final token =
+              state.extra as String? ??
+              state.uri.queryParameters['token'] ??
+              '';
           return ResetPasswordPage(token: token);
         },
       ),
@@ -80,6 +88,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 path: AppConstants.homeRoute,
                 builder: (context, state) => const HomeTab(),
                 routes: [
+                  GoRoute(
+                    path: 'shop',
+                    builder: (context, state) => const ShopPage(),
+                  ),
+                  GoRoute(
+                    path: 'cart',
+                    builder: (context, state) => const CartPage(),
+                  ),
+                  GoRoute(
+                    path: 'orders',
+                    builder: (context, state) => const OrdersPage(),
+                  ),
                   GoRoute(
                     path: 'payments',
                     builder: (context, state) => const PaymentsPage(),
@@ -118,6 +138,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: AppConstants.profileRoute,
                 builder: (context, state) => const ProfilePage(),
+                routes: [
+                  GoRoute(
+                    path: 'addresses',
+                    builder: (context, state) => const AddressesPage(),
+                  ),
+                ],
               ),
             ],
           ),

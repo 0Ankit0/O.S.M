@@ -38,4 +38,16 @@ describe('AnalyticsService', () => {
     expect(service.enabled).toBe(false);
     expect(service.isFeatureFlagEnabled('missing')).toBe(false);
   });
+
+  it('supports swapping adapters at runtime', () => {
+    const first = createAdapter();
+    const second = createAdapter();
+    const service = new AnalyticsService(first);
+
+    service.setAdapter(second);
+    service.capture('provider_swapped');
+
+    expect(first.capture).not.toHaveBeenCalled();
+    expect(second.capture).toHaveBeenCalledWith('provider_swapped', undefined);
+  });
 });

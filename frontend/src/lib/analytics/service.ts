@@ -14,6 +14,7 @@
  *   const { capture, isEnabled } = useAnalytics();
  */
 import type { AnalyticsAdapter } from './interface';
+import type { AnalyticsProviderConfig } from './base';
 
 export class AnalyticsService {
   private adapter: AnalyticsAdapter | null;
@@ -76,32 +77,67 @@ export class AnalyticsService {
 // Singleton factory
 // ------------------------------------------------------------------
 
+type AnalyticsBuilder = (config: AnalyticsProviderConfig) => AnalyticsAdapter | null;
+
+function buildPostHogAdapter(config: AnalyticsProviderConfig): AnalyticsAdapter | null {
+  if (!config.apiKey) return null;
+  const { PostHogAdapter } = require('./adapters/posthog') as typeof import('./adapters/posthog');
+  return new PostHogAdapter(config.apiKey, config.host ?? 'https://us.i.posthog.com');
+}
+
+function buildMixpanelAdapter(config: AnalyticsProviderConfig): AnalyticsAdapter | null {
+  if (!config.apiKey) return null;
+  const { MixpanelAdapter } = require('./adapters/mixpanel') as typeof import('./adapters/mixpanel');
+  return new MixpanelAdapter(config.apiKey, config.host);
+}
+
+const REGISTRY: Record<string, AnalyticsBuilder> = {
+  posthog: buildPostHogAdapter,
+  mixpanel: buildMixpanelAdapter,
+};
+
+function resolveConfig(): AnalyticsProviderConfig | null {
+  const enabled = process.env.NEXT_PUBLIC_ANALYTICS_ENABLED === 'true';
+  if (!enabled) return null;
+  const provider = (process.env.NEXT_PUBLIC_ANALYTICS_PROVIDER ?? 'posthog').toLowerCase();
+  let apiKey = process.env.NEXT_PUBLIC_ANALYTICS_API_KEY ?? '';
+  let host = process.env.NEXT_PUBLIC_ANALYTICS_HOST ?? '';
+
+  if (provider === 'posthog') {
+    apiKey = apiKey || process.env.NEXT_PUBLIC_POSTHOG_KEY || '';
+    host = host || process.env.NEXT_PUBLIC_POSTHOG_HOST || 'https://us.i.posthog.com';
+  } else if (provider === 'mixpanel') {
+    apiKey =
+      apiKey ||
+      process.env.NEXT_PUBLIC_MIXPANEL_PROJECT_TOKEN ||
+      process.env.NEXT_PUBLIC_POSTHOG_KEY ||
+      '';
+    host =
+      host ||
+      process.env.NEXT_PUBLIC_MIXPANEL_HOST ||
+      process.env.NEXT_PUBLIC_MIXPANEL_API_HOST ||
+      '';
+  }
+
+  return { provider, apiKey, host };
+}
+
 function buildService(): AnalyticsService {
   // Only initialise in the browser — posthog-js is browser-only
   if (typeof window === 'undefined') {
     return new AnalyticsService(null);
   }
 
-  const enabled = process.env.NEXT_PUBLIC_ANALYTICS_ENABLED === 'true';
-  const apiKey = process.env.NEXT_PUBLIC_POSTHOG_KEY ?? '';
-  const host = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? 'https://us.i.posthog.com';
-  const provider = process.env.NEXT_PUBLIC_ANALYTICS_PROVIDER ?? 'posthog';
-
-  if (!enabled || !apiKey) {
+  const config = resolveConfig();
+  if (!config) {
     return new AnalyticsService(null);
   }
-
-  if (provider === 'posthog') {
-    const { PostHogAdapter } = require('./adapters/posthog') as typeof import('./adapters/posthog');
-    return new AnalyticsService(new PostHogAdapter(apiKey, host));
+  const builder = REGISTRY[config.provider];
+  if (!builder) {
+    console.warn(`Unknown analytics provider "${config.provider}". Analytics disabled.`);
+    return new AnalyticsService(null);
   }
-
-  if (provider === 'mixpanel') {
-    const { MixpanelAdapter } = require('./adapters/mixpanel') as typeof import('./adapters/mixpanel');
-    return new AnalyticsService(new MixpanelAdapter(apiKey, host));
-  }
-
-  return new AnalyticsService(null);
+  return new AnalyticsService(builder(config));
 }
 
 /** Module-level singleton — initialised lazily on first import. */

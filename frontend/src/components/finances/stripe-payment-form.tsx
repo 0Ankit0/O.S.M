@@ -6,92 +6,59 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ExternalLink } from 'lucide-react';
-import type { PaymentProvider, InitiatePaymentResponse } from '@/types';
+import type { PaymentProvider } from '@/types';
 
 interface PaymentInitiateFormProps {
   onSuccess?: () => void;
   onError?: (error: Error) => void;
 }
 
-/** Auto-submit a hidden HTML form — required for eSewa's form-POST flow. */
-function submitHiddenForm(action: string, fields: Record<string, unknown>) {
-  const form = document.createElement('form');
-  form.method = 'POST';
-  form.action = action;
-  form.target = '_self';
-  Object.entries(fields).forEach(([name, value]) => {
-    const input = document.createElement('input');
-    input.type = 'hidden';
-    input.name = name;
-    input.value = String(value ?? '');
-    form.appendChild(input);
-  });
-  document.body.appendChild(form);
-  form.submit();
-}
-
 export function PaymentInitiateForm({ onSuccess, onError }: PaymentInitiateFormProps) {
-  const [selectedProvider, setSelectedProvider] = useState<PaymentProvider | ''>('');
-  const [amountNpr, setAmountNpr] = useState('');
+  const [selectedProvider, setSelectedProvider] = useState<PaymentProvider | ''>('stripe');
+  const [amountEur, setAmountEur] = useState('');
   const [orderName, setOrderName] = useState('');
-  // Stable order ID per form mount — user can refresh page for a new one
   const [orderId] = useState(() => `ORDER-${Date.now()}`);
   const [customerName, setCustomerName] = useState('');
   const [customerEmail, setCustomerEmail] = useState('');
-  const [customerPhone, setCustomerPhone] = useState('');
 
   const { data: providers, isLoading: loadingProviders } = usePaymentProviders();
   const initiatePayment = useInitiatePayment();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedProvider || !amountNpr || !orderName) return;
+    if (!selectedProvider || !amountEur || !orderName) return;
 
-    const nprAmount = parseFloat(amountNpr);
-    if (isNaN(nprAmount) || nprAmount <= 0) return;
+    const eurAmount = parseFloat(amountEur);
+    if (isNaN(eurAmount) || eurAmount <= 0) return;
 
-    // Khalti expects paisa (1 NPR = 100 paisa); eSewa expects NPR directly
-    const amount =
-      selectedProvider === 'khalti' ? Math.round(nprAmount * 100) : Math.round(nprAmount);
+    // Stripe expects cents (1 EUR = 100 cents)
+    const amount = Math.round(eurAmount * 100);
 
     const returnUrl = `${window.location.origin}/payment-callback?provider=${selectedProvider}`;
 
-    const payload = {
-      provider: selectedProvider as PaymentProvider,
-      amount,
-      purchase_order_id: orderId,
-      purchase_order_name: orderName,
-      return_url: returnUrl,
-      website_url: window.location.origin,
-      customer_name: customerName || undefined,
-      customer_email: customerEmail || undefined,
-      customer_phone: customerPhone || undefined,
-    };
-
-    initiatePayment.mutate(payload, {
-      onSuccess: (data: InitiatePaymentResponse) => {
-        if (selectedProvider === 'esewa' && data.extra?.form_fields) {
-          // eSewa requires an HTML form POST — auto-submit it
-          const formAction =
-            (data.extra.form_action as string) ||
-            'https://rc-epay.esewa.com.np/api/epay/main/v2/form';
-          submitHiddenForm(formAction, data.extra.form_fields as Record<string, unknown>);
-        } else if (data.payment_url) {
-          window.location.href = data.payment_url;
-        } else {
-          onSuccess?.();
-        }
+    initiatePayment.mutate(
+      {
+        provider: selectedProvider as PaymentProvider,
+        amount,
+        purchase_order_id: orderId,
+        purchase_order_name: orderName,
+        return_url: returnUrl,
+        website_url: window.location.origin,
+        customer_name: customerName || undefined,
+        customer_email: customerEmail || undefined,
       },
-      onError: (err) => onError?.(err as Error),
-    });
+      {
+        onSuccess: (data) => {
+          if (data.payment_url) {
+            window.location.href = data.payment_url;
+          } else {
+            onSuccess?.();
+          }
+        },
+        onError: (err) => onError?.(err as Error),
+      }
+    );
   };
-
-  const amountHint =
-    selectedProvider === 'khalti'
-      ? 'Amount in NPR — e.g. 10 sends 1000 paisa to Khalti'
-      : selectedProvider === 'esewa'
-        ? 'Amount in NPR — e.g. 100 = NPR 100'
-        : '';
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
@@ -121,26 +88,25 @@ export function PaymentInitiateForm({ onSuccess, onError }: PaymentInitiateFormP
 
       {/* Amount */}
       <div className="space-y-1">
-        <Label htmlFor="pay-amount">Amount (NPR)</Label>
+        <Label htmlFor="pay-amount">Amount (EUR)</Label>
         <Input
           id="pay-amount"
           type="number"
-          min="1"
-          step="1"
-          placeholder="e.g. 100"
-          value={amountNpr}
-          onChange={(e) => setAmountNpr(e.target.value)}
+          min="0.01"
+          step="0.01"
+          placeholder="e.g. 12.99"
+          value={amountEur}
+          onChange={(e) => setAmountEur(e.target.value)}
           required
         />
-        {amountHint && <p className="text-xs text-gray-500">{amountHint}</p>}
       </div>
 
       {/* Order name */}
       <div className="space-y-1">
-        <Label htmlFor="pay-order-name">Order / Product Name</Label>
+        <Label htmlFor="pay-order-name">Order / Description</Label>
         <Input
           id="pay-order-name"
-          placeholder="e.g. Subscription Plan"
+          placeholder="e.g. Order #1234"
           value={orderName}
           onChange={(e) => setOrderName(e.target.value)}
           required
@@ -179,39 +145,14 @@ export function PaymentInitiateForm({ onSuccess, onError }: PaymentInitiateFormP
               onChange={(e) => setCustomerEmail(e.target.value)}
             />
           </div>
-          <div className="space-y-1">
-            <Label htmlFor="cust-phone">Phone</Label>
-            <Input
-              id="cust-phone"
-              placeholder="9800000000"
-              value={customerPhone}
-              onChange={(e) => setCustomerPhone(e.target.value)}
-            />
-          </div>
         </div>
       </details>
-
-      {/* Test credential hints */}
-      {selectedProvider === 'khalti' && (
-        <div className="rounded-lg bg-blue-50 border border-blue-200 p-3 text-xs text-blue-800 space-y-0.5">
-          <p className="font-semibold">Khalti Sandbox Credentials</p>
-          <p>Mobile: 9800000000 – 9800000005</p>
-          <p>MPIN: 1111 &nbsp;·&nbsp; OTP: 987654</p>
-        </div>
-      )}
-      {selectedProvider === 'esewa' && (
-        <div className="rounded-lg bg-green-50 border border-green-200 p-3 text-xs text-green-800 space-y-0.5">
-          <p className="font-semibold">eSewa Sandbox Credentials</p>
-          <p>eSewa ID: 9806800001 – 9806800005</p>
-          <p>Password: Nepal@123 &nbsp;·&nbsp; OTP: 123456</p>
-        </div>
-      )}
 
       <Button
         type="submit"
         className="w-full"
         isLoading={initiatePayment.isPending}
-        disabled={!selectedProvider || !amountNpr || !orderName || initiatePayment.isPending}
+        disabled={!selectedProvider || !amountEur || !orderName || initiatePayment.isPending}
       >
         <ExternalLink className="mr-2 h-4 w-4" />
         {initiatePayment.isPending ? 'Initiating…' : `Pay with ${selectedProvider || '…'}`}

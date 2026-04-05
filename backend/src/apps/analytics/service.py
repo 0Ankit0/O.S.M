@@ -8,6 +8,7 @@ need to guard against ``None``.
 import logging
 from typing import Any
 
+from src.apps.analytics.base import AnalyticsProperties
 from src.apps.analytics.interface import AnalyticsProvider
 
 logger = logging.getLogger(__name__)
@@ -43,7 +44,7 @@ class AnalyticsService:
         self,
         distinct_id: str,
         event: str,
-        properties: dict[str, Any] | None = None,
+        properties: AnalyticsProperties | None = None,
     ) -> None:
         """Record a named event for *distinct_id* (a user ID or anonymous ID)."""
         if self._provider:
@@ -55,7 +56,7 @@ class AnalyticsService:
     async def identify(
         self,
         distinct_id: str,
-        properties: dict[str, Any] | None = None,
+        properties: AnalyticsProperties | None = None,
     ) -> None:
         """Attach persistent traits to a person record."""
         if self._provider:
@@ -77,7 +78,7 @@ class AnalyticsService:
         distinct_id: str,
         group_type: str,
         group_key: str,
-        properties: dict[str, Any] | None = None,
+        properties: AnalyticsProperties | None = None,
     ) -> None:
         """Associate *distinct_id* with a group (e.g. organisation / tenant)."""
         if self._provider:
@@ -90,7 +91,7 @@ class AnalyticsService:
         self,
         distinct_id: str,
         path: str,
-        properties: dict[str, Any] | None = None,
+        properties: AnalyticsProperties | None = None,
     ) -> None:
         """Record a page / screen view."""
         if self._provider:
@@ -148,3 +149,12 @@ class AnalyticsService:
                 await self._provider.shutdown()
             except Exception as exc:
                 logger.warning("Analytics shutdown error: %s", exc)
+
+    async def swap_provider(self, provider: AnalyticsProvider | None) -> None:
+        """Replace the active provider at runtime."""
+        if self._provider and self._provider is not provider:
+            try:
+                await self._provider.shutdown()
+            except Exception as exc:
+                logger.warning("Analytics provider swap shutdown error: %s", exc)
+        self._provider = provider

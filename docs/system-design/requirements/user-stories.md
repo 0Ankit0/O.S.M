@@ -3,54 +3,58 @@
 ## 1. Customer Stories
 
 ### US-001: Customer Registration
-**As a** customer, **I want to** register using my email or phone number **so that** I can place orders on the platform.
+**As a** customer, **I want to** register using my email address **so that** I can place orders on the platform.
 
 **Acceptance Criteria:**
-- Customer can register with email + password or phone + OTP
-- Social login via Google and Apple is supported
-- Email/phone is verified via OTP before account activation
-- Duplicate email/phone registrations are rejected with clear messaging
+- Customer can register with email + password
+- Social login via Google is supported
+- Email is verified via confirmation link before account activation
+- Duplicate email registrations are rejected with clear messaging
 - Upon successful registration, customer is redirected to the homepage with a welcome notification
 
 **Priority:** High | **Points:** 3
 
 ---
 
-### US-002: Manage Delivery Addresses
-**As a** customer, **I want to** save and manage multiple delivery addresses **so that** I can quickly select a delivery location during checkout.
+### US-002: Manage Default Delivery Address
+**As a** customer, **I want to** save a default delivery address or use my current location **so that** checkout is fast and accurate.
 
 **Acceptance Criteria:**
-- Customer can add, edit, and delete addresses with labels (Home, Work, Custom)
-- System validates address against configured delivery zones and shows serviceability status
-- Customer can set one address as default; default is pre-selected at checkout
-- Addresses linked to active orders cannot be deleted (soft-delete with warning)
+- Customer can set a default delivery address (used automatically at checkout)
+- Customer can choose to use their current GPS location at checkout as an alternative
+- System validates the address or location against configured delivery zones and rejects out-of-zone locations with a clear message
+- Once an order is initiated, the delivery address is locked — the customer cannot change it
+- Default address can be updated only when it is not linked to an active order
 
 **Priority:** High | **Points:** 3
 
 ---
 
-### US-003: Browse and Search Products
-**As a** customer, **I want to** search and browse products by category and keyword **so that** I can find items I want to purchase.
+### US-003: Browse and Search Menu
+**As a** customer, **I want to** browse the restaurant menu by category and keyword **so that** I can find items I want to order.
 
 **Acceptance Criteria:**
+- Storefront presents only **published** products that are marked as available today
+- Products not available today are shown with a "Not available today" badge and cannot be added to cart
 - Full-text search returns results within 500 ms at P95
-- Results can be filtered by category, price range, and availability
-- Results can be sorted by relevance, price (low-high, high-low), popularity, and newest
-- Out-of-stock items are shown with a clear "Out of Stock" badge and cannot be added to cart
+- Results can be filtered by category and availability
+- Results can be sorted by relevance, price, and newest
+- Hierarchical category tree is navigable to any depth
 
 **Priority:** High | **Points:** 5
 
 ---
 
 ### US-004: Add to Cart and Checkout
-**As a** customer, **I want to** add items to my cart and proceed to checkout **so that** I can purchase products.
+**As a** customer, **I want to** add items to my cart and proceed to checkout **so that** I can place my order.
 
 **Acceptance Criteria:**
 - Customer can add items with selected variant and quantity
-- Cart persists across sessions (authenticated users)
-- Cart shows real-time prices, taxes, shipping fee, and discount breakdown
-- At checkout, system validates stock availability and reserves inventory for 15 minutes
-- Expired reservations are released and customer is notified if items become unavailable
+- Cart persists across sessions (authenticated users only)
+- Cart shows real-time prices, taxes, delivery fee (based on zone), and discount breakdown
+- At checkout, system validates that all items are still published and available today
+- System shows estimated delivery time via Google Maps ETA on the order confirmation page
+- Delivery address is locked on checkout confirmation
 
 **Priority:** High | **Points:** 8
 
@@ -63,50 +67,51 @@
 - Customer enters coupon code and sees instant validation result (valid/invalid/expired)
 - Valid coupons show the discount amount deducted from the total
 - System enforces coupon rules: minimum order value, usage limits, validity period, applicable categories
-- Only one coupon can be applied per order (unless stacking is explicitly configured)
+- Only one coupon can be applied per order unless stacking is explicitly configured
 
 **Priority:** Medium | **Points:** 3
 
 ---
 
-### US-006: Track Order Status
-**As a** customer, **I want to** view the real-time status and milestone history of my order **so that** I know when to expect delivery.
+### US-006: Track Order Status and ETA
+**As a** customer, **I want to** view the real-time status and estimated delivery time of my order **so that** I know when to expect my food.
 
 **Acceptance Criteria:**
-- Order detail page shows current state and estimated delivery window
-- Timestamped milestone history is displayed (e.g., Confirmed at 10:00, ReadyForDispatch at 14:00)
-- Customer receives push/email/SMS notification at each major status change
-- POD (signature + photo) is visible once order is delivered
+- Order detail page shows current state and Google Maps-based estimated delivery time
+- Timestamped milestone history is displayed (e.g., Confirmed, Preparing, OutForDelivery)
+- Customer receives email notification at each major status change
+- POD (signature or photo) is visible once order is delivered
+- GPS location of each delivery staff status update is recorded (visible to admin)
 
 **Priority:** High | **Points:** 5
 
 ---
 
 ### US-007: Cancel Order
-**As a** customer, **I want to** cancel my order before it is picked up for delivery **so that** I receive a refund.
+**As a** customer, **I want to** cancel my order before the kitchen starts preparing it **so that** I can potentially receive a refund.
 
 **Acceptance Criteria:**
-- Cancel button is available for orders in `Confirmed` and `ReadyForDispatch` states
+- Cancel button is available only for orders in `Pending` state
+- Once the order moves to `Preparing`, no customer-side cancellation is possible
 - Cancellation requires a reason code from a predefined list
-- Refund is automatically initiated to original payment method
-- Inventory reservation is released immediately
-- Customer receives cancellation confirmation notification
+- A refund request is automatically created and submitted for admin review (no automatic refund)
+- Customer receives email confirmation of cancellation and refund request submission
 
 **Priority:** High | **Points:** 5
 
 ---
 
-### US-008: Initiate Return
-**As a** customer, **I want to** request a return for a delivered order **so that** I can get a refund for unsatisfactory items.
+### US-008: Request Refund
+**As a** customer, **I want to** request a refund for a delivered order **so that** I can raise an issue with my order.
 
 **Acceptance Criteria:**
-- Return option is available within the configured return window (default 7 days post-delivery)
-- Customer selects return reason from predefined list and optionally uploads photo evidence
-- System confirms return eligibility (within window, non-excluded category)
-- Customer receives return request confirmation with estimated pickup date
-- Return status is trackable on the order detail page
+- Refund request option is available after the order is delivered
+- Customer provides a mandatory reason; optional description
+- System submits the request for admin review
+- Customer receives email confirmation that the refund request has been received
+- Customer can view refund request status (Requested, Approved, Denied, Completed) on the order detail page
 
-**Priority:** High | **Points:** 5
+**Priority:** High | **Points:** 3
 
 ---
 
@@ -116,225 +121,244 @@
 **Acceptance Criteria:**
 - Order history shows all orders with status, date, total, and item summary
 - Orders are sorted by date (newest first) with pagination
-- Customer can click into any order for full details including milestones and POD
-- Customer can filter history by status (Active, Delivered, Cancelled, Returned)
+- Customer can click into any order for full details including milestones, POD, and review
+- Customer can filter history by status (Active, Delivered, Cancelled)
 
 **Priority:** Medium | **Points:** 3
 
 ---
 
-### US-010: Manage Notification Preferences
+### US-010: Submit Order Review and Rating
+**As a** customer, **I want to** leave a review and rating for my delivered order **so that** I can share my experience.
+
+**Acceptance Criteria:**
+- Review option appears on the order detail page once the order status is `Delivered`
+- Customer provides a star rating (1–5, required) and optional text comment and photo
+- Each order has at most one review; customer can edit within 48 hours
+- Review and average rating are visible on the restaurant storefront home page
+- Review submission is not available for orders that are not in `Delivered` state
+
+**Priority:** Medium | **Points:** 5
+
+---
+
+### US-011: Select Language
+**As a** customer, **I want to** switch the platform language between German and English **so that** I can use the platform in my preferred language.
+
+**Acceptance Criteria:**
+- Language toggle is available on the storefront and customer portal
+- Switching language instantly updates all UI strings, error messages, and labels
+- Selected language persists across sessions in the user's account settings
+- Currency displays as EUR with locale-appropriate formatting (€12,50 in de; €12.50 in en)
+- Dates follow locale conventions (DD.MM.YYYY in de; MM/DD/YYYY in en)
+
+**Priority:** High | **Points:** 3
+
+---
+
+### US-012: Manage Notification Preferences
 **As a** customer, **I want to** control which notifications I receive **so that** I am not overwhelmed by messages.
 
 **Acceptance Criteria:**
-- Customer can toggle email, SMS, and push notifications independently
-- Transactional notifications (OTP, order confirmation) cannot be disabled
-- Promotional notifications have separate opt-in/opt-out controls
+- Customer can toggle email notifications for promotional content
+- Transactional notifications (order confirmation, status updates) cannot be disabled
+- SMS toggle is visible but disabled (greyed out); no SMS are sent
 - Preference changes take effect within 1 minute
 
 **Priority:** Low | **Points:** 2
 
 ---
 
-## 2. Warehouse Staff Stories
-
-### US-011: View Pick List
-**As a** warehouse staff member, **I want to** see my assigned pick list **so that** I can efficiently locate and prepare order items.
+### US-013: Inspect Menu Item Details
+**As a** customer, **I want to** view details of a menu item before adding it to cart **so that** I can compare variants and make a confident decision.
 
 **Acceptance Criteria:**
-- Dashboard shows all assigned fulfillment tasks sorted by priority (SLA deadline)
-- Each task shows order ID, items, quantities, warehouse location/bin, and SLA countdown
-- Staff can start a task, which moves it to "In Progress" state
-- Only one task can be in "In Progress" at a time per staff member
-
-**Priority:** High | **Points:** 5
-
----
-
-### US-012: Verify Picks via Barcode Scan
-**As a** warehouse staff member, **I want to** scan item barcodes during picking **so that** pick accuracy is verified before packing.
-
-**Acceptance Criteria:**
-- Staff scans each item barcode; system validates against expected SKU and quantity
-- Mismatched scans are flagged with an alert and logged for supervisor review
-- All items must be scanned before the task can be marked as "Picked"
-- System records pick accuracy rate per staff member
-
-**Priority:** High | **Points:** 5
-
----
-
-### US-013: Pack and Generate Manifest
-**As a** warehouse staff member, **I want to** mark an order as packed and generate a packing slip **so that** it is ready for delivery handoff.
-
-**Acceptance Criteria:**
-- Staff records package dimensions and weight
-- System generates a printable packing slip with order details, items, and delivery address
-- Staff confirms packing complete; order transitions to `ReadyForDispatch`
-- System generates delivery manifest grouped by delivery zone for handoff to delivery team
-
-**Priority:** High | **Points:** 5
-
----
-
-### US-014: Inspect Returned Items
-**As a** warehouse staff member, **I want to** inspect returned items **so that** the system can determine whether to approve the refund.
-
-**Acceptance Criteria:**
-- Staff sees pending return inspections with original order details and customer-stated reason
-- Staff records inspection result: Accept, Reject (with reason), or Partial Accept
-- Accepted items are returned to stock; inventory levels are updated
-- Rejected returns notify the customer with rejection reason
-- Inspection results are auditable with staff identity and timestamp
-
-**Priority:** Medium | **Points:** 5
-
----
-
-## 3. Delivery Staff Stories
-
-### US-015: View Delivery Assignments
-**As a** delivery staff member, **I want to** see my assigned deliveries for the day **so that** I can plan my delivery run.
-
-**Acceptance Criteria:**
-- Dashboard shows all assigned deliveries with customer name, address, order summary, and delivery window
-- Deliveries are sorted by suggested sequence based on delivery zone proximity
-- Staff can view a printable route sheet
-- New assignments trigger push notification
-
-**Priority:** High | **Points:** 5
-
----
-
-### US-016: Update Delivery Status
-**As a** delivery staff member, **I want to** update order status as I progress through my delivery run **so that** customers and operations can track progress.
-
-**Acceptance Criteria:**
-- Staff updates status through milestones: `PickedUp` → `OutForDelivery` → `Delivered`
-- Each status update records timestamp and staff identity
-- System enforces milestone ordering — states cannot be skipped
-- Status updates trigger customer notifications
-
-**Priority:** High | **Points:** 3
-
----
-
-### US-017: Capture Proof of Delivery
-**As a** delivery staff member, **I want to** capture the recipient's signature and a photo **so that** delivery is confirmed and disputes are minimised.
-
-**Acceptance Criteria:**
-- Staff captures electronic signature on device screen
-- Staff captures at least one photo at the delivery location
-- POD is uploaded to S3 and linked to the order record
-- If offline, POD is stored locally and synced when connectivity resumes
-- POD upload failure triggers retry; after 3 failures, alert sent to operations
-
-**Priority:** High | **Points:** 8
-
----
-
-### US-018: Record Failed Delivery
-**As a** delivery staff member, **I want to** record a failed delivery attempt with a reason **so that** the system can reschedule or process a return.
-
-**Acceptance Criteria:**
-- Staff selects failure reason from predefined list (customer unavailable, wrong address, refused, access issue)
-- Staff can add optional notes
-- System notifies customer of failed attempt with reschedule options
-- After 3 failed attempts, system transitions order to `ReturnedToWarehouse`
-
-**Priority:** High | **Points:** 5
-
----
-
-### US-019: Collect Return Pickups
-**As a** delivery staff member, **I want to** view and execute assigned return pickups **so that** returned items are brought back to the warehouse.
-
-**Acceptance Criteria:**
-- Return pickups appear on the delivery dashboard alongside regular deliveries
-- Staff confirms item collection from customer
-- Staff records collected item condition notes
-- System updates return status to `PickedUp` and generates return manifest
+- Customer can open item details from the menu without leaving the shopping flow
+- Detail view shows description, available variants, and price
+- Featured items are clearly distinguished from the rest of the menu
+- Opening a menu item records a `catalog.product_viewed` analytics event
 
 **Priority:** Medium | **Points:** 3
 
 ---
 
-## 4. Operations Manager Stories
+## 2. Delivery Staff Stories
 
-### US-020: Monitor Fulfillment Dashboard
-**As an** operations manager, **I want to** view a real-time fulfillment dashboard **so that** I can identify bottlenecks and SLA risks.
+### US-014: View Delivery Assignments
+**As a** delivery staff member, **I want to** see my assigned deliveries for the day **so that** I can plan my delivery run.
 
 **Acceptance Criteria:**
-- Dashboard shows: orders pending fulfillment, orders ready for dispatch, orders in delivery, completed today
-- SLA countdown is visible for each pending order with colour-coded urgency (green/yellow/red)
-- Manager can filter by warehouse, delivery zone, and date range
+- Dashboard shows all assigned deliveries with customer name, address, order summary, and delivery window
+- Deliveries are sorted by delivery zone proximity
+- New assignments trigger email/push notification
+- Staff can view a printable route sheet
+
+**Priority:** High | **Points:** 5
+
+---
+
+### US-015: Update Delivery Status with Location
+**As a** delivery staff member, **I want to** update order status as I progress through my delivery **so that** customers and operations can track progress.
+
+**Acceptance Criteria:**
+- Staff updates status through milestones: `PickedUp` → `OutForDelivery` → `Delivered`
+- **Each status update captures the GPS coordinates (latitude, longitude) of the staff member at that moment**
+- Each update records timestamp and staff identity
+- System enforces milestone ordering — states cannot be skipped
+- Status updates trigger customer email notifications
+
+**Priority:** High | **Points:** 3
+
+---
+
+### US-016: Capture Proof of Delivery
+**As a** delivery staff member, **I want to** capture the recipient's signature or a photo **so that** delivery is confirmed before I mark it complete.
+
+**Acceptance Criteria:**
+- **Staff must capture either an electronic signature or at least one photo before marking the order as `Delivered`**
+- System blocks the `Delivered` status transition until POD is provided
+- POD is uploaded to object storage and linked to the order record
+- If offline, POD is stored locally and synced when connectivity resumes
+- POD is visible to the customer and admin on the order detail page
+
+**Priority:** High | **Points:** 8
+
+---
+
+### US-017: Record Failed Delivery
+**As a** delivery staff member, **I want to** record a failed delivery attempt **so that** operations can follow up with the customer.
+
+**Acceptance Criteria:**
+- Staff selects failure reason (customer unavailable, wrong address, access issue)
+- Staff can add optional notes
+- System notifies customer of failed attempt via email
+- After 3 failed attempts, admin is alerted for manual resolution
+
+**Priority:** High | **Points:** 5
+
+---
+
+## 3. Operations Manager Stories
+
+### US-018: Monitor Order Dashboard
+**As an** operations manager, **I want to** view a real-time order and delivery dashboard **so that** I can identify bottlenecks and SLA risks.
+
+**Acceptance Criteria:**
+- Dashboard shows: orders pending, orders being prepared, orders out for delivery, completed today
+- SLA countdown is visible per order with colour-coded urgency (green/yellow/red)
+- Manager can filter by delivery zone and date range
 - Dashboard auto-refreshes every 30 seconds
 
 **Priority:** High | **Points:** 5
 
 ---
 
-### US-021: Reassign Delivery Staff
+### US-019: Reassign Delivery Staff
 **As an** operations manager, **I want to** reassign deliveries to different staff members **so that** I can balance workload or handle staff absences.
 
 **Acceptance Criteria:**
 - Manager can select one or more orders and reassign to another available staff member
 - Reassignment is allowed only for orders in `ReadyForDispatch` or `PickedUp` states
 - Original staff member is notified of reassignment
-- New staff member receives the delivery details via push notification
+- New staff member receives the delivery details
 - Reassignment is logged in the audit trail
 
 **Priority:** High | **Points:** 5
 
 ---
 
-### US-022: View Delivery Performance Reports
+### US-020: Manage Delivery Zones
+**As an** operations manager, **I want to** configure delivery zones **so that** the system knows which areas we service and the associated fees.
+
+**Acceptance Criteria:**
+- Manager can create, edit, and deactivate delivery zones
+- Each zone has: name, geographic boundary (postcodes or polygon), **delivery fee**, minimum order value, SLA target
+- Deactivating a zone prevents new orders to that area but does not affect active orders
+- Zone changes are versioned with effective date
+- Delivery fee is automatically applied at checkout based on the customer's zone
+
+**Priority:** Medium | **Points:** 5
+
+---
+
+### US-021: View Delivery Performance Reports
 **As an** operations manager, **I want to** view delivery performance reports **so that** I can identify improvement areas and high performers.
 
 **Acceptance Criteria:**
 - Reports show: on-time delivery rate, average delivery time, failed delivery rate, staff utilisation
 - Reports can be filtered by staff member, delivery zone, and date range
 - Staff performance ranking is available with key metrics
-- Reports can be exported in CSV and PDF formats
+- Reports can be exported in Excel (XLSX), CSV, and PDF formats
 
 **Priority:** Medium | **Points:** 5
 
 ---
 
-### US-023: Manage Delivery Zones
-**As an** operations manager, **I want to** configure delivery zones **so that** the system knows which areas we service and the associated fees.
+## 4. Admin Stories
 
-**Acceptance Criteria:**
-- Manager can create, edit, and deactivate delivery zones
-- Each zone has: name, geographic boundary (PIN codes or polygon), delivery fee, min order value, SLA target
-- Deactivating a zone prevents new orders to that area but does not affect active orders
-- Zone changes are versioned with effective date
-
-**Priority:** Medium | **Points:** 5
-
----
-
-## 5. Admin Stories
-
-### US-024: Manage Product Catalog
-**As an** admin, **I want to** manage the product catalog **so that** customers can browse and purchase current products.
+### US-022: Manage Product Catalog
+**As an** admin, **I want to** manage the product catalog **so that** customers can browse and order current dishes.
 
 **Acceptance Criteria:**
 - Admin can create, edit, and archive products and categories
-- Bulk product upload via CSV is supported with validation and error reporting
+- Admin can **toggle a product's published state directly from the product list page** (inline toggle, no full edit needed)
+- Only published products appear on the customer storefront
+- Category hierarchy supports unlimited depth
 - Product changes are reflected in search results within 5 seconds
-- Archived products are hidden from search but retained for historical order references
 
 **Priority:** High | **Points:** 5
 
 ---
 
-### US-025: Manage Coupons and Promotions
+### US-023: Toggle Daily Product Availability
+**As an** admin, **I want to** mark a product as unavailable for today **so that** customers cannot order a dish when an ingredient is out.
+
+**Acceptance Criteria:**
+- Admin can toggle daily availability per product from the product list page
+- Products marked unavailable today show "Not available today" on the storefront and cannot be added to cart
+- Daily availability resets to `available` automatically at the start of each day (configurable)
+- Toggling daily availability does not change the product's published state
+- Changes take effect within 30 seconds
+
+**Priority:** High | **Points:** 3
+
+---
+
+### US-024: Review and Approve Refund Requests
+**As an** admin, **I want to** review and approve or deny refund requests **so that** I can decide whether a customer deserves a refund after reviewing their order.
+
+**Acceptance Criteria:**
+- Admin sees all pending refund requests in the refund management dashboard
+- Each request shows: order details, items ordered, total paid, customer reason, and order status at time of request
+- Admin approves or denies with a mandatory internal note
+- On approval, system initiates a full-order refund through Stripe; no partial refunds
+- Customer receives email notification with outcome and admin note (translated to customer's language)
+- Once a meal has been prepared, admin policy is to deny refunds; the system does not enforce this automatically but records the decision
+
+**Priority:** High | **Points:** 5
+
+---
+
+### US-025: Send Custom Notification to Customers
+**As an** admin, **I want to** compose and send a custom notification message to customers **so that** I can communicate important updates like closures or new menu items.
+
+**Acceptance Criteria:**
+- Admin can compose a subject and body for a custom email message
+- Admin can target all customers or a filtered segment (by zone, by last order date range)
+- Admin can schedule the message for a future time or send immediately
+- System records sender, timestamp, recipient count, and message content for audit
+- Sent messages cannot be recalled; admin is prompted to confirm before sending
+
+**Priority:** Medium | **Points:** 3
+
+---
+
+### US-026: Manage Coupons and Promotions
 **As an** admin, **I want to** create and manage discount coupons **so that** I can run marketing campaigns.
 
 **Acceptance Criteria:**
-- Admin can create coupons with: code, discount type, value, min order, validity dates, usage limits
-- Admin can view coupon usage statistics (times used, revenue impact)
+- Admin can create coupons with: code, discount type (percentage/fixed/free delivery), value, min order, validity dates, usage limits
+- Admin can view coupon usage statistics
 - Admin can deactivate coupons immediately
 - Coupon creation and changes are audited
 
@@ -342,12 +366,12 @@
 
 ---
 
-### US-026: Manage Staff Accounts
-**As an** admin, **I want to** onboard and manage warehouse and delivery staff accounts **so that** they can access their operational dashboards.
+### US-027: Manage Delivery Staff Accounts
+**As an** admin, **I want to** onboard and manage delivery staff accounts **so that** they can access their operational dashboards.
 
 **Acceptance Criteria:**
-- Admin can create staff accounts with role (Warehouse Staff, Delivery Staff, Operations Manager)
-- Admin can assign staff to warehouse locations or delivery zones
+- Admin can create staff accounts with role (Delivery Staff, Operations Manager)
+- Admin can assign staff to delivery zones
 - Admin can deactivate staff accounts (soft delete, preserving audit trail)
 - Staff account changes are audited with admin identity and timestamp
 
@@ -355,12 +379,54 @@
 
 ---
 
-### US-027: View Platform Analytics
+### US-028: View Weekly Sales Report
+**As an** admin, **I want to** view and export the weekly sales report **so that** I can track business performance.
+
+**Acceptance Criteria:**
+- Weekly report is automatically generated each Monday covering the previous Mon–Sun
+- Report includes: total orders, revenue, top 5 products, delivery performance summary, refund summary
+- Report is accessible from the admin dashboard
+- Report can be optionally emailed to configured recipients
+- Report can be exported in **Excel (XLSX)**, CSV, and PDF formats
+
+**Priority:** Medium | **Points:** 5
+
+---
+
+### US-029: Print Invoice and Thermal Receipt
+**As an** admin, **I want to** print an invoice or a compact receipt for an order **so that** I can provide documentation to the customer or kitchen.
+
+**Acceptance Criteria:**
+- Admin can click "Print Invoice" on the order detail page to generate and print a full PDF invoice
+- Invoice includes: order ID, date, itemised list with prices, taxes, delivery fee, discount, and total
+- Admin can click "Print Receipt" to generate a layout optimised for **80 mm thermal printers**
+- Receipt includes: restaurant name, order ID, date/time, items with quantities and prices, subtotal, delivery fee, discount, total, payment confirmation
+- Both print actions produce output immediately without server round-trip (client-side rendering of print view)
+
+**Priority:** Medium | **Points:** 5
+
+---
+
+### US-030: Manage Notification Templates
+**As an** admin, **I want to** manage notification templates **so that** customer and staff communications are consistent and professional in both German and English.
+
+**Acceptance Criteria:**
+- Admin can create and edit templates for each event type in both German and English
+- Templates support variable placeholders ({{order_id}}, {{customer_name}}, {{eta}}, etc.)
+- Templates are versioned with rollback to previous version
+- Admin can preview templates with sample data before publishing
+- Language selection determines which template variant is sent to each customer
+
+**Priority:** Low | **Points:** 3
+
+---
+
+### US-031: View Platform Analytics
 **As an** admin, **I want to** view platform-wide analytics **so that** I can make data-driven business decisions.
 
 **Acceptance Criteria:**
-- Dashboard shows: total revenue, order volume, average order value, customer growth, return rate
-- Metrics support day/week/month/year comparison
+- Dashboard shows: total revenue, order volume, average order value, top products, refund rate, average review rating
+- Metrics default to **weekly view** with options for day/month/year
 - Admin can drill down by product, category, delivery zone
 - Dashboard data refreshes at most every 5 minutes
 
@@ -368,11 +434,13 @@
 
 ---
 
-### US-028: Configure Platform Settings
+### US-032: Configure Platform Settings
 **As an** admin, **I want to** configure global platform settings **so that** business rules are enforced consistently.
 
 **Acceptance Criteria:**
-- Admin can configure: tax rates, default shipping fee, return window duration, reservation TTL, max delivery attempts
+- Admin can configure: tax rates, default delivery fee fallback, max delivery attempts, preparation time estimate, daily availability reset time
+- Language default can be set for the platform
+- Google Maps API key and Stripe keys are configurable via environment settings
 - Configuration changes are versioned with rollback capability
 - Changes take effect within 1 minute without service restart
 - All configuration changes are audited
@@ -381,76 +449,63 @@
 
 ---
 
-### US-029: Manage Notification Templates
-**As an** admin, **I want to** manage notification templates **so that** customer and staff communications are consistent and professional.
-
-**Acceptance Criteria:**
-- Admin can create and edit templates for each event type (order confirmed, shipped, delivered, etc.) and channel (email, SMS, push)
-- Templates support variable placeholders ({{order_id}}, {{customer_name}}, etc.)
-- Templates are versioned with rollback to previous version
-- Admin can preview templates with sample data before publishing
-
-**Priority:** Low | **Points:** 3
-
----
-
-### US-030: View Audit Logs
+### US-033: View Audit Logs
 **As an** admin, **I want to** view audit logs **so that** I can investigate incidents and ensure compliance.
 
 **Acceptance Criteria:**
 - Audit log captures: actor, action, resource, timestamp, before/after values
 - Logs are searchable by actor, action type, resource type, and date range
 - Logs are immutable — no edit or delete capability
-- Logs are retained for at least 1 year
+- Logs are retained for at least 1 year (GDPR-compliant retention policy)
 
 **Priority:** Medium | **Points:** 3
 
 ---
 
-## 6. Finance Stories
+## 5. Finance Stories
 
-### US-031: View Payment Reconciliation
+### US-034: View Payment Reconciliation
 **As a** finance team member, **I want to** view daily payment reconciliation reports **so that** I can ensure all payments are accounted for.
 
 **Acceptance Criteria:**
-- Report shows: payment captures, refunds, net settlement, discrepancies
+- Report shows: payment captures, refunds (admin-approved), net settlement, discrepancies
 - Discrepancies exceeding configured tolerance are flagged for manual review
-- Report can be filtered by date range and payment gateway
-- Report can be exported in CSV format
+- Report can be filtered by date range
+- Report can be exported in Excel (XLSX) and CSV formats
 
 **Priority:** Medium | **Points:** 5
 
 ---
 
-### US-032: Process Manual Refunds
-**As a** finance team member, **I want to** process manual refunds for edge cases **so that** customers receive their money in exceptional situations.
+### US-035: Process Manual Refund
+**As a** finance team member, **I want to** execute admin-approved refunds **so that** customers receive their money.
 
 **Acceptance Criteria:**
-- Finance can initiate refund for any order with mandatory reason and supervisor approval
-- System validates refund amount does not exceed original payment
-- Manual refund is logged in audit trail with approver identity
-- Customer receives refund confirmation notification
+- Finance can process refunds for orders where admin has approved the refund request
+- System validates refund amount does not exceed original payment (full order only, no partial)
+- Manual refund processing is logged in the audit trail
+- Customer receives email confirmation of completed refund
 
 **Priority:** Medium | **Points:** 3
 
 ---
 
-## 7. Cross-Cutting Stories
+## 6. Cross-Cutting Stories
 
-### US-033: Receive Real-Time Notifications
-**As a** user (customer, staff, or admin), **I want to** receive timely notifications for relevant events **so that** I stay informed and can act promptly.
+### US-036: Receive Real-Time Email Notifications
+**As a** user (customer or staff), **I want to** receive timely email notifications for relevant events **so that** I stay informed and can act promptly.
 
 **Acceptance Criteria:**
 - Notifications are dispatched within 60 seconds of the triggering event (P95)
 - Failed notification delivery is retried up to 3 times with 30-second intervals
 - Notification delivery receipts are recorded for audit
-- Users can control their notification preferences
+- Email content is delivered in the customer's selected language (German or English)
 
 **Priority:** High | **Points:** 5
 
 ---
 
-### US-034: Idempotent API Operations
+### US-037: Idempotent API Operations
 **As a** developer, **I want** all mutating API operations to be idempotent **so that** retries and network failures do not cause duplicate side effects.
 
 **Acceptance Criteria:**
@@ -463,13 +518,40 @@
 
 ---
 
-### US-035: Event-Driven Architecture
-**As a** developer, **I want** all state changes to emit domain events via EventBridge **so that** services are decoupled and the system is extensible.
+### US-038: Switch Analytics Provider
+**As a** developer or operator, **I want to** switch analytics providers by configuration **so that** the OMS can move between PostHog, Mixpanel, and future tools without rewriting feature logic.
+
+**Acceptance Criteria:**
+- Backend, web, and mobile use the same analytics abstraction pattern
+- Provider selection is controlled by environment configuration
+- Unknown or disabled providers fail safely without breaking customer or admin flows
+- OMS business events such as `catalog.product_viewed`, `cart.item_added`, and `order.created` continue to fire from the same call sites after a provider switch
+
+**Priority:** Medium | **Points:** 3
+
+---
+
+### US-039: Review Moderation
+**As an** admin, **I want to** moderate customer reviews **so that** inappropriate content is not shown on the storefront.
+
+**Acceptance Criteria:**
+- Admin can view all submitted reviews with order reference, rating, and text
+- Admin can hide a review (hidden reviews are removed from storefront but retained for audit)
+- Admin can flag a review for follow-up
+- Average rating and total review count on the storefront update within 5 minutes of moderation action
+
+**Priority:** Low | **Points:** 3
+
+---
+
+### US-040: Event-Driven Architecture
+**As a** developer, **I want** all major state changes to emit domain events **so that** services are decoupled and the system is extensible.
 
 **Acceptance Criteria:**
 - Every order state transition emits a domain event with event type, payload, and correlation ID
 - Events are published within 2 seconds of the state change (P95)
-- Failed event delivery lands in DLQ for manual redrive
+- Failed async delivery lands in retry/dead-letter handling for manual redrive
 - Event consumers are idempotent — duplicate events are safely ignored
 
 **Priority:** High | **Points:** 8
+

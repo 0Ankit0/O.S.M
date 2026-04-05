@@ -1,4 +1,8 @@
-from typing import Generic, Sequence, TypeVar
+from __future__ import annotations
+
+import base64
+import json
+from typing import Any, Generic, Sequence, TypeVar
 from pydantic import BaseModel, Field
 
 T = TypeVar("T")
@@ -27,3 +31,31 @@ class PaginatedResponse(BaseModel, Generic[T]):
             limit=limit,
             has_more=(skip + len(items)) < total
         )
+
+
+class CursorPage(BaseModel, Generic[T]):
+    items: Sequence[T]
+    next_cursor: str | None = None
+    has_more: bool = False
+
+    @classmethod
+    def from_items(
+        cls,
+        items: Sequence[T],
+        *,
+        next_cursor_value: dict[str, Any] | None,
+        has_more: bool,
+    ) -> "CursorPage[T]":
+        encoded_cursor: str | None = None
+        if next_cursor_value is not None:
+            encoded_cursor = base64.urlsafe_b64encode(
+                json.dumps(next_cursor_value).encode("utf-8")
+            ).decode("utf-8")
+        return cls(items=items, next_cursor=encoded_cursor, has_more=has_more)
+
+
+class APIErrorDetail(BaseModel):
+    error: str
+    message: str
+    details: dict[str, Any] | list[Any] | None = None
+    trace_id: str | None = None

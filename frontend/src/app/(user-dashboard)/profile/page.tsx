@@ -5,6 +5,7 @@ import { AvatarForm } from '@/components/auth/avatar-form';
 import { EditProfileForm } from '@/components/auth/edit-profile-form';
 import { ChangePasswordForm } from '@/components/auth/change-password-form';
 import { TwoFactorForm } from '@/components/auth/two-factor-form';
+import { AddressBook } from '@/components/oms/address-book';
 
 export default function ProfilePage() {
   const { user } = useAuthStore();
@@ -20,6 +21,7 @@ export default function ProfilePage() {
         <div className="space-y-6">
           <AvatarForm />
           <EditProfileForm />
+          <AddressBook />
         </div>
         <div className="space-y-6">
           <ChangePasswordForm />

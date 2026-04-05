@@ -1,6 +1,4 @@
-// Finance / Payments module types
-
-export type PaymentProvider = 'khalti' | 'esewa' | 'stripe' | 'paypal';
+export type PaymentProvider = 'stripe' | 'paypal';
 export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded' | 'cancelled';
 
 export interface InitiatePaymentRequest {
@@ -20,17 +18,13 @@ export interface InitiatePaymentResponse {
   provider: PaymentProvider;
   status: PaymentStatus;
   payment_url?: string;
-  provider_pidx?: string;
   extra?: Record<string, unknown>;
 }
 
 export interface VerifyPaymentRequest {
   provider: PaymentProvider;
-  pidx?: string;       // Khalti
-  oid?: string;        // eSewa legacy
-  refId?: string;      // eSewa legacy
-  data?: string;       // eSewa v2 base64-encoded callback data
   transaction_id?: string;
+  data?: string;
 }
 
 export interface VerifyPaymentResponse {
@@ -51,7 +45,6 @@ export interface PaymentTransaction {
   purchase_order_id: string;
   purchase_order_name: string;
   provider_transaction_id?: string;
-  provider_pidx?: string;
   return_url: string;
   website_url: string;
   failure_reason?: string;

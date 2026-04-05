@@ -26,10 +26,10 @@ class PaymentTransactionBase(SQLModel):
         description="Payment gateway provider"
     )
     amount: int = Field(
-        description="Amount in the smallest currency unit (e.g. paisa for NPR)"
+        description="Amount in the smallest currency unit (e.g. cents for EUR)"
     )
     currency: str = Field(
-        default="NPR",
+        default="EUR",
         max_length=3,
         description="ISO 4217 currency code"
     )

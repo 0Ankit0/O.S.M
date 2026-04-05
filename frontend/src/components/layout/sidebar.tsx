@@ -6,12 +6,11 @@ import {
   Home,
   Bell,
   Settings,
-  Building2,
   User,
-  CreditCard,
-  Key,
   ArrowRight,
-  Map,
+  Package,
+  ShoppingCart,
+  ClipboardList,
 } from 'lucide-react';
 import { OrgSwitcher } from './org-switcher';
 import { useSystemCapabilities } from '@/hooks/use-system';
@@ -19,12 +18,11 @@ import { useAuthStore } from '@/store/auth-store';
 
 const mainNavigation = [
   { name: 'Dashboard', href: '/dashboard', icon: Home },
+  { name: 'Shop', href: '/shop', icon: Package },
+  { name: 'Cart', href: '/cart', icon: ShoppingCart },
+  { name: 'Orders', href: '/orders', icon: ClipboardList },
   { name: 'Profile', href: '/profile', icon: User },
-  { name: 'Tenants', href: '/tenants', icon: Building2, feature: 'multitenancy' },
-  { name: 'Payments', href: '/finances', icon: CreditCard, feature: 'finance' },
   { name: 'Notifications', href: '/notifications', icon: Bell, feature: 'notifications' },
-  { name: 'Maps', href: '/maps', icon: Map, feature: 'maps' },
-  { name: 'Active Sessions', href: '/tokens', icon: Key, feature: 'auth' },
   { name: 'Settings', href: '/settings', icon: Settings },
 ];
 

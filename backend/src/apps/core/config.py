@@ -171,6 +171,7 @@ class Settings(BaseSettings):
     FEATURE_ANALYTICS: bool = True
     FEATURE_SOCIAL_AUTH: bool = True
     FEATURE_MAPS: bool = False
+    FEATURE_OMS: bool = True
 
     REDIS_HOST: str = "localhost"
     REDIS_PORT: int = 6379
@@ -310,6 +311,8 @@ class Settings(BaseSettings):
 
     ANALYTICS_ENABLED: bool = False
     ANALYTICS_PROVIDER: str = "posthog"
+    ANALYTICS_API_KEY: str = ""
+    ANALYTICS_HOST: str = ""
     POSTHOG_API_KEY: str = ""
     POSTHOG_HOST: str = "https://us.i.posthog.com"
     MIXPANEL_PROJECT_TOKEN: str = ""
@@ -328,6 +331,7 @@ class Settings(BaseSettings):
         "FEATURE_ANALYTICS",
         "FEATURE_SOCIAL_AUTH",
         "FEATURE_MAPS",
+        "FEATURE_OMS",
         "EMAIL_ENABLED",
         "PUSH_ENABLED",
         "SMS_ENABLED",

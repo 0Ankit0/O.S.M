@@ -55,7 +55,13 @@ export function LoginForm({ enabledProviders }: LoginFormProps) {
         const otpResult = result as OTPLoginResponse;
         router.push(`/otp-verify?temp_token=${otpResult.temp_token}`);
       } else {
-        router.push('/dashboard');
+        const next =
+          typeof window !== 'undefined'
+            ? new URLSearchParams(window.location.search).get('next')
+            : null;
+        const redirectTo =
+          next && next.startsWith('/') && !next.startsWith('/login') ? next : '/dashboard';
+        router.push(redirectTo);
       }
     } catch {
       // error shown via loginError

@@ -15,6 +15,8 @@ Pattern notes
 from abc import ABC, abstractmethod
 from typing import Any
 
+from src.apps.analytics.base import AnalyticsProperties
+
 
 class AnalyticsProvider(ABC):
     """Abstract analytics strategy — all providers must implement this."""
@@ -28,7 +30,7 @@ class AnalyticsProvider(ABC):
         self,
         distinct_id: str,
         event: str,
-        properties: dict[str, Any] | None = None,
+        properties: AnalyticsProperties | None = None,
     ) -> None:
         """Record a single event for *distinct_id*."""
 
@@ -36,7 +38,7 @@ class AnalyticsProvider(ABC):
     async def identify(
         self,
         distinct_id: str,
-        properties: dict[str, Any] | None = None,
+        properties: AnalyticsProperties | None = None,
     ) -> None:
         """Set or update persistent properties on a person."""
 
@@ -50,7 +52,7 @@ class AnalyticsProvider(ABC):
         distinct_id: str,
         group_type: str,
         group_key: str,
-        properties: dict[str, Any] | None = None,
+        properties: AnalyticsProperties | None = None,
     ) -> None:
         """Associate *distinct_id* with a group (e.g. organisation/tenant)."""
 
@@ -59,7 +61,7 @@ class AnalyticsProvider(ABC):
         self,
         distinct_id: str,
         path: str,
-        properties: dict[str, Any] | None = None,
+        properties: AnalyticsProperties | None = None,
     ) -> None:
         """Record a page / screen view."""
 

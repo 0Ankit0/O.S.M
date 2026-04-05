@@ -2,197 +2,225 @@
 
 ## Overview
 
-Sprint plan, architecture decision records, and cutover checklist for the Order Management and Delivery System.
+This playbook tracks how the restaurant OMS is being delivered in the actual monorepo. The implementation target is FastAPI + Next.js + Flutter, with PostgreSQL, Redis, Celery, and provider abstractions. It reflects the updated restaurant-specific requirements: food delivery and ordering for a German restaurant, no inventory, no warehouse, no reservations, no Khalti, Stripe-only payments, admin-gated refunds, i18n (de/en), and Google Maps ETA.
 
-## Sprint Plan
+## Delivery Tracks
 
-### Phase 1 — Foundation (Sprints 1-2, 4 weeks)
+### Track 1. Foundation and doc realignment ✅
 
-| Sprint | Focus | Deliverables |
-|---|---|---|
-| Sprint 1 | Infrastructure + Auth | VPC, RDS, DynamoDB, ElastiCache, Cognito, CDK stacks, CI/CD pipeline |
-| Sprint 2 | Core Domain | Customer Service, Product Catalog, Inventory Service, OpenSearch sync |
+Goal:
+- Align architecture docs with the real stack
+- Introduce OMS constants, schemas, routers, models, and shared conventions
+- Establish provider-agnostic analytics
 
-**Exit Criteria:**
-- Infrastructure deployed to dev environment
-- Customer registration and login functional
-- Product CRUD and search operational
-- Inventory tracking with reservation logic
-
----
-
-### Phase 2 — Order and Payment (Sprints 3-4, 4 weeks)
-
-| Sprint | Focus | Deliverables |
-|---|---|---|
-| Sprint 3 | Cart + Checkout + Payment | Cart Service (DynamoDB), checkout flow, payment gateway integration (Stripe), idempotency guard |
-| Sprint 4 | Order Lifecycle | Order state machine, milestone tracking, cancellation flow, EventBridge event pipeline |
-
-**Exit Criteria:**
-- End-to-end checkout working
-- Payment capture and refund functional
-- Order state machine enforcing all guards
-- Events flowing through EventBridge with DLQ
+Outcome:
+- OMS backend module exists
+- Analytics abstraction exists across backend, web, and mobile
+- Architecture and core requirement docs updated to describe the FastAPI restaurant OMS
+- Requirements and user stories rewritten to reflect Germany food-delivery context
 
 ---
 
-### Phase 3 — Fulfillment and Delivery (Sprints 5-7, 6 weeks)
+### Track 2. Customer commerce ✅ (mostly complete)
 
-| Sprint | Focus | Deliverables |
-|---|---|---|
-| Sprint 5 | Fulfillment | Pick-pack workflow, barcode scanning, manifest generation, Step Functions orchestration |
-| Sprint 6 | Delivery Core | Delivery zone management, staff assignment engine, status tracking, delivery milestones |
-| Sprint 7 | POD + Failed Delivery | POD capture (signature + photo), S3 upload with offline sync, failed delivery flow, rescheduling |
+Goal:
+- Menu-first storefront (published products only)
+- Product browsing, category filtering, cart, checkout, addresses, order history
 
-**Exit Criteria:**
-- Full order-to-delivery flow working
-- POD capture and upload working (including offline)
-- Failed delivery with 3-attempt retry logic
-- Delivery zone-based assignment
+Current outcome:
+- Customer web shop, cart, orders, dashboard, and profile address book exist
+- Customer mobile shop, cart, orders, and address management exist
+- Checkout, cancellation, and address management exist in the backend
+- Home page shows restaurant details and full menu; login required only for cart/order actions
 
 ---
 
-### Phase 4 — Returns and Notifications (Sprints 8-9, 4 weeks)
+### Track 3. Operations workflows (in progress)
 
-| Sprint | Focus | Deliverables |
-|---|---|---|
-| Sprint 8 | Returns | Return eligibility, return pickup assignment, inspection workflow, automated refund trigger |
-| Sprint 9 | Notifications | Notification templates, SES/SNS/Pinpoint integration, preference management, delivery tracking |
+Goal:
+- Delivery assignment and milestone management with GPS location capture
+- POD capture (signature or photo) required before `Delivered`
+- Failed delivery handling
+- Admin-gated refund approval (no automatic refunds)
+- Zone-based delivery fee at checkout
 
-**Exit Criteria:**
-- Complete return flow: request → pickup → inspection → refund
-- Multi-channel notifications at all order milestones
-- Template management for admin
+Current outcome:
+- Delivery status, reassignment, failure, and POD endpoints exist
+- Admin operations pages exist for menu, deliveries, and overview metrics
+- Zone management endpoints exist
 
----
-
-### Phase 5 — Analytics, Admin, and Polish (Sprints 10-12, 6 weeks)
-
-| Sprint | Focus | Deliverables |
-|---|---|---|
-| Sprint 10 | Analytics | Sales dashboard, delivery performance KPIs, inventory reports, report export (CSV/PDF) |
-| Sprint 11 | Admin Portal | RBAC management, platform configuration, staff management, coupon management, audit logs |
-| Sprint 12 | Polish + Testing | E2E test suite, load testing, security audit, documentation review, staging validation |
-
-**Exit Criteria:**
-- All dashboard metrics operational
-- Admin portal fully functional
-- E2E tests pass for all critical flows
-- Load test validates 500 orders/min target
-- Security audit findings resolved
+Remaining work:
+- Add lat/lon capture to every delivery status update endpoint
+- Require POD before `Delivered` transition in state machine
+- Build admin refund approval dashboard (approve/deny; no partial, no automatic)
+- Enforce address lock after checkout confirmation
+- Apply zone delivery fee automatically at checkout
 
 ---
 
-## Architecture Decision Records (ADRs)
+### Track 4. Catalog management improvements (in progress)
 
-### ADR-001: Serverless-First with Lambda + Fargate Hybrid
+Goal:
+- Inline published toggle from product list page
+- Daily availability toggle per product
+- Category hierarchy without depth limit
+- Search returns only published + available-today products
 
-**Status:** Accepted
-
-**Context:** Need to balance cost efficiency for low-traffic periods with sustained throughput for fulfillment and delivery services.
-
-**Decision:** Use Lambda for event-driven, short-lived operations (order, payment, inventory, notification). Use Fargate for sustained-connection services (fulfillment, delivery, return, analytics).
-
-**Consequences:**
-- Lambda: pay-per-invocation, auto-scaling, cold start trade-off
-- Fargate: predictable performance, long-lived connections to RDS, higher baseline cost
-- Provisioned concurrency on critical Lambda functions mitigates cold starts
-
----
-
-### ADR-002: PostgreSQL + DynamoDB Dual Database Strategy
-
-**Status:** Accepted
-
-**Context:** Order and product data requires relational integrity (foreign keys, transactions). Cart and milestone data requires high-throughput key-value access.
-
-**Decision:** RDS PostgreSQL for OLTP (orders, products, payments, staff). DynamoDB for high-velocity data (cart items, order milestones, session state).
-
-**Consequences:**
-- Relational integrity for critical business data
-- Single-digit millisecond reads for hot-path data
-- Increased operational complexity (two database technologies)
-- Clear data ownership per database: no cross-database joins
+Remaining work:
+- Add `is_available_today` field to product model with Celery daily reset job
+- Expose bulk-toggle endpoint for published and daily availability
+- Update storefront filtering to respect both `is_published` and `is_available_today`
+- Update category backend to remove 3-level depth constraint
 
 ---
 
-### ADR-003: EventBridge Over SQS/SNS for Event Routing
+### Track 5. i18n — German and English
 
-**Status:** Accepted
+Goal:
+- Language toggle (de/en) in web, mobile, and email templates
+- EUR locale formatting per selected language
+- All customer-facing and admin strings translated
 
-**Context:** Multiple services need to react to domain events. Need flexible routing without point-to-point wiring.
-
-**Decision:** Use EventBridge custom bus for all domain events. Event rules route to Lambda/Fargate consumers. SQS used only for DLQ.
-
-**Consequences:**
-- Content-based routing via event rules (no code changes to add consumers)
-- Schema registry for event contract management
-- Built-in retry with DLQ on failure
-- Cost: $1.00 per million events published (negligible at expected volume)
-
----
-
-### ADR-004: Status-Driven Delivery Over GPS Tracking
-
-**Status:** Accepted
-
-**Context:** System uses internal delivery staff, not third-party drivers. GPS tracking adds significant complexity (MQTT, Kinesis, geofencing) without proportional value.
-
-**Decision:** Delivery visibility via milestone status updates (PickedUp, OutForDelivery, Delivered) rather than continuous GPS location.
-
-**Consequences:**
-- Dramatically simpler architecture (no real-time location infrastructure)
-- Lower mobile app battery consumption
-- Customers see status milestones, not a map pin
-- Sufficient for internal operations where staff is trusted and managed
+Implementation approach:
+- Web (Next.js): `next-intl` or `react-i18next` with `/messages/de.json` and `/messages/en.json`
+- Mobile (Flutter): `flutter_localizations` + ARB files for de and en
+- Email templates: separate de/en variants per event type in the notification template table
+- Language preference persisted on the user model (`preferred_language` field)
 
 ---
 
-### ADR-005: Idempotency via ElastiCache
+### Track 6. Reviews and ratings
 
-**Status:** Accepted
+Goal:
+- Customer can submit a 1–5 star review per delivered order
+- Admin can moderate reviews
+- Average rating shown on storefront
 
-**Context:** Network retries and Lambda retriggers can cause duplicate order creation and payment capture.
-
-**Decision:** All mutating endpoints require `Idempotency-Key` header. Key looked up in ElastiCache before processing. Response cached for 24 hours.
-
-**Consequences:**
-- No duplicate orders or payments even with aggressive retries
-- ElastiCache adds sub-millisecond latency for key lookup
-- Client must generate and persist idempotency keys
-- 24-hour key TTL balances safety with storage efficiency
+Implementation approach:
+- New `OrderReview` model: `order_id`, `customer_id`, `rating`, `comment`, `photo_url`, `created_at`, `is_hidden`
+- Review submission endpoint available only for `Delivered` orders (one per order, editable within 48 h)
+- Admin moderation endpoint to hide/flag reviews
+- Storefront home page aggregates average rating from non-hidden reviews
 
 ---
 
-## Cutover Checklist
+### Track 7. Reporting and printing
 
-### Pre-Production
+Goal:
+- Weekly auto-generated report (Mon–Sun)
+- Excel (XLSX), CSV, PDF export
+- 80 mm thermal receipt printing
+- PDF invoice generation
 
-- [ ] All CDK stacks deploy successfully to staging
-- [ ] E2E test suite passes in staging (checkout, delivery, return)
-- [ ] Load test validates 500 orders/min with P95 < 500 ms
-- [ ] Security audit findings resolved (OWASP, dependency scan)
-- [ ] RDS Multi-AZ failover tested
-- [ ] DLQ redrive runbook tested
-- [ ] Monitoring dashboards configured and validated
-- [ ] All CloudWatch alarms firing correctly in test scenarios
-- [ ] Runbooks documented for SEV-1 and SEV-2 scenarios
-- [ ] On-call rotation and PagerDuty escalation configured
+Implementation approach:
+- Celery beat task runs each Monday at 00:01 generating the weekly report and storing to object storage
+- XLSX export: `openpyxl` library
+- PDF generation: `weasyprint` or `reportlab`
+- Thermal receipt: 80 mm-width PDF at 72 dpi rendered client-side or via backend endpoint
+- "Print Receipt" and "Print Invoice" buttons on the admin order detail page
 
-### Production Deploy
+---
 
-- [ ] DNS cutover via Route 53 weighted routing (10% canary)
-- [ ] Monitor canary metrics for 10 minutes
-- [ ] If error rate < 1% → promote to 100%
-- [ ] If error rate >= 1% → automatic rollback to previous deployment
-- [ ] Verify CloudWatch dashboards showing production traffic
-- [ ] Verify X-Ray traces showing correct service map
-- [ ] Confirm notification channels working (send test email/SMS/push)
+### Track 8. Google Maps ETA
 
-### Post-Deploy
+Goal:
+- Show estimated delivery time on order tracking page and in emails
 
-- [ ] Monitor DLQ depth for 24 hours (expect 0)
-- [ ] Verify first real orders flow through complete lifecycle
-- [ ] Confirm payment reconciliation runs successfully next day
-- [ ] Review CloudWatch Logs for unexpected errors
-- [ ] Performance baseline established (P95, P99 latency snapshots)
+Implementation approach:
+- Backend calls Google Maps Distance Matrix API (async via Celery or inline) on order confirmation and on each delivery status update
+- ETA stored on the order record and refreshed on status change
+- `GOOGLE_MAPS_API_KEY` configured via environment
+- ETA displayed on the customer order detail page and included in status change emails
+
+---
+
+### Track 9. Custom notification broadcast
+
+Goal:
+- Admin can compose and send a custom email to customers or a segment
+
+Implementation approach:
+- New `CustomNotification` model: `subject`, `body`, `sender_id`, `scheduled_at`, `sent_at`, `recipient_filter`
+- Admin dashboard: compose form with recipient filter (all, by zone, by last order date)
+- Celery task sends emails via the existing email provider adapter
+- Audit record created with sender, timestamp, and recipient count
+
+---
+
+## Near-Term Roadmap
+
+### Backend
+
+1. Add `is_available_today` to product model + Celery daily reset job
+2. Add GPS lat/lon to delivery status update endpoint
+3. Build admin refund approval API (approve/deny; full-order Stripe refund on approval)
+4. Add `preferred_language` to user model
+5. Integrate Google Maps Distance Matrix for ETA
+6. Create `OrderReview` model and endpoints
+7. Build weekly report Celery task with XLSX/PDF output
+8. Add `CustomNotification` model and broadcast endpoint
+9. Remove or disable Khalti payment adapter references
+10. Enforce address-lock logic in order state machine
+
+### Web (Next.js)
+
+1. Add inline published + daily availability toggles to admin product list page
+2. Build admin refund dashboard (pending → approve/deny)
+3. Add i18n infrastructure (de/en toggle, persisted per user)
+4. Add review submission form on order detail page (post-delivery)
+5. Show Google Maps ETA on customer order tracking page
+6. Add "Print Receipt" (80 mm) and "Print Invoice" (PDF) buttons on admin order detail
+7. Build weekly reports page with XLSX/CSV/PDF download
+8. Build admin custom notification broadcast page
+
+### Mobile (Flutter)
+
+1. Add GPS capture to delivery status update flow
+2. Block `Delivered` transition until POD (signature or photo) is provided
+3. Add i18n: de/en language toggle
+4. Add order review form on delivered order detail page
+
+## Working Principles
+
+- Prefer vertical slices that are shippable end-to-end.
+- Keep docs updated when behaviour changes materially.
+- Treat PostgreSQL as canonical business data.
+- Use Redis for idempotency and hot-path coordination, not as the source of truth.
+- Keep analytics, notifications, payments, and storage behind provider interfaces.
+- Preserve the menu-first storefront behaviour while extending it into a full OMS.
+- No inventory tracking — product availability is a manual daily toggle, not a stock counter.
+- All refunds are admin-approved; the system never initiates a refund automatically.
+
+## Cutover Readiness Checklist
+
+### Product readiness
+
+- [ ] Customer can browse the published, available-today menu; add items to cart; and place orders
+- [ ] Customer can view orders, milestones, Google Maps ETA, and POD
+- [ ] Customer can submit a refund request and track its status
+- [ ] Customer can leave a review for a delivered order
+- [ ] Customer can select German or English language
+- [ ] Admin can toggle product published state from the product list page
+- [ ] Admin can toggle daily availability per product
+- [ ] Admin can approve or deny refund requests
+- [ ] Admin can send custom notification broadcasts
+- [ ] Admin can view and export weekly reports (XLSX, PDF)
+- [ ] Admin can print 80 mm thermal receipts and PDF invoices
+- [ ] Delivery staff mobile app captures GPS on every status update
+- [ ] Delivery staff must provide POD before marking an order as Delivered
+
+### Technical readiness
+
+- [ ] Core OMS integration tests cover checkout, cancellation, delivery progression, and refund approval
+- [ ] Celery jobs: daily availability reset, weekly report generation, notification dispatch
+- [ ] Analytics events flowing through the configured provider
+- [ ] Google Maps API key configured and ETA calls integrated
+- [ ] Stripe as sole payment gateway; Khalti adapter removed or disabled
+- [ ] i18n files (de/en) present for web and mobile
+- [ ] Runtime configuration documented for local and production environments
+
+### Documentation readiness
+
+- [ ] Requirements reflect the restaurant OMS for Germany (no inventory, no warehouse, no Khalti)
+- [ ] Architecture and infrastructure docs match FastAPI + Next.js + Flutter
+- [ ] Implementation docs reflect the real repo status and updated gaps
