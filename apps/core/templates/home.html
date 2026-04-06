@@ -1,57 +1,37 @@
-{% load static tailwind_tags i18n %}
-<!DOCTYPE html>
-<html lang="en" class="h-full">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Django Template Platform">
-    <title>{% block title %}Django Template{% endblock %}</title>
-    
-    <!-- Tailwind CSS -->
-    {% tailwind_css %}
-    
-    <!-- HTMX for dynamic updates -->
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-    
-    <!-- Alpine.js for client-side interactivity -->
-    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-    
-    {% block extra_head %}{% endblock %}
-</head>
-<body class="h-full bg-base-200" x-data="{ sidebarOpen: false, notificationsOpen: false }">
-    {% block body %}
-    <div class="navbar bg-base-100 shadow-sm">
-      <div class="flex-1">
-        <a class="btn btn-ghost text-xl" href="/">Django Template</a>
-      </div>
-      <div class="flex-none">
-        <ul class="menu menu-horizontal px-1">
-          {% if user.is_authenticated %}
-            <li><a href="{% url 'core:dashboard' %}">{% trans "Dashboard" %}</a></li>
-            <li><a href="{% url 'iam:logout' %}">Logout</a></li>
-          {% else %}
-            <li><a href="{% url 'iam:login' %}">Login</a></li>
-            <li><a href="{% url 'iam:signup' %}">Sign up</a></li>
-          {% endif %}
-        </ul>
-      </div>
+{% extends 'base_user.html' %}
+{% load i18n %}
+
+{% block title %}{% trans "Restaurant OMS" %}{% endblock %}
+{% block page_title %}{% trans "Welcome" %}{% endblock %}
+
+{% block hero %}
+<section class="bg-base-100 border-b border-base-300">
+  <div class="container mx-auto px-4 py-10">
+    <h2 class="text-4xl font-bold mb-3">{% trans "Menu-first ordering experience" %}</h2>
+    <p class="text-base-content/70 max-w-2xl">{% trans "Browse featured dishes, build your cart, and track orders in one Django-powered platform." %}</p>
+  </div>
+</section>
+{% endblock %}
+
+{% block content %}
+<div class="grid gap-4 md:grid-cols-3">
+  <a href="{% url 'catalog:index' %}" class="card bg-base-100 shadow-sm border border-base-300">
+    <div class="card-body">
+      <h3 class="card-title">{% trans "Browse catalog" %}</h3>
+      <p>{% trans "Explore featured products and categories." %}</p>
     </div>
-    
-    {% block content %}
-    {% endblock %}
-    {% endblock %}
-    
-    <!-- Initialize Lucide Icons -->
-    <script>lucide.createIcons();</script>
-    
-    <!-- Custom JS -->
-    <script src="{% static 'js/main.js' %}"></script>
-    {% block extra_js %}{% endblock %}
-    
-    {% load django_browser_reload %}
-    {% django_browser_reload_script %}
-</body>
-</html>
+  </a>
+  <a href="{% url 'orders:index' %}" class="card bg-base-100 shadow-sm border border-base-300">
+    <div class="card-body">
+      <h3 class="card-title">{% trans "Track orders" %}</h3>
+      <p>{% trans "Review active and historical order milestones." %}</p>
+    </div>
+  </a>
+  <a href="{% url 'accounts:index' %}" class="card bg-base-100 shadow-sm border border-base-300">
+    <div class="card-body">
+      <h3 class="card-title">{% trans "Manage account" %}</h3>
+      <p>{% trans "Update profile, addresses, and security settings." %}</p>
+    </div>
+  </a>
+</div>
+{% endblock %}
