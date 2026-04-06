@@ -44,6 +44,9 @@ urlpatterns = [
                 # Notifications
                 path("", include("notifications.api.urls")),
 
+                # Accounts
+                path("accounts/", include("accounts.api.urls")),
+
                 # Finances & Subscriptions
                 path("finances/", include("finances.api.urls")),
 
