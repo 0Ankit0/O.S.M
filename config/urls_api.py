@@ -30,7 +30,7 @@ urlpatterns = [
     re_path(r'^swagger(?P<format>\.json|\.yaml)$', schema_view.without_ui(cache_timeout=0), name='schema-json'),
     re_path(r"^doc/", schema_view.with_ui("swagger"), name='schema-swagger-ui'),
     re_path(r"^redoc/", schema_view.with_ui("redoc"), name='schema-redoc'),
-    
+
     path(
         "api/",
         include(
@@ -52,10 +52,13 @@ urlpatterns = [
 
                 # Integrations (OpenAI)
                 path("integrations/", include("integrations.api.urls")),
+
+                # Catalog
+                path("catalog/", include("catalog.api.urls")),
             ]
         ),
     ),
-    
+
 
 ]
 
