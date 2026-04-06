@@ -1,0 +1,7 @@
+{% load i18n %}
+<div class="text-sm breadcrumbs">
+    <ul>
+        <li><a href="{% url 'core:dashboard' %}">{% trans "Dashboard" %}</a></li>
+        <li>{% block breadcrumb_current %}{% trans "Current" %}{% endblock %}</li>
+    </ul>
+</div>

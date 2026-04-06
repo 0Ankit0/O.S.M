@@ -1,0 +1,38 @@
+{% load static tailwind_tags i18n %}
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Restaurant OMS Admin">
+    <title>{% block title %}Admin · Restaurant OMS{% endblock %}</title>
+    {% tailwind_css %}
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="h-full bg-base-200 text-base-content">
+<div class="min-h-screen grid grid-cols-1 lg:grid-cols-[280px_1fr]">
+    <aside class="bg-base-100 border-r border-base-300 p-4">
+        {% block sidebar %}
+            {% include 'partials/admin_sidebar.html' %}
+        {% endblock %}
+    </aside>
+    <div class="flex flex-col">
+        <header class="bg-base-100 border-b border-base-300 px-6 py-4 space-y-3">
+            {% block breadcrumbs %}
+                {% include 'partials/breadcrumbs.html' %}
+            {% endblock %}
+            <div class="flex items-center justify-between gap-4">
+                <h1 class="text-2xl font-bold">{% block page_title %}{% trans "Operations" %}{% endblock %}</h1>
+                <div>{% block primary_actions %}{% endblock %}</div>
+            </div>
+        </header>
+        <main class="flex-1 p-6 space-y-4">
+            {% include 'partials/alerts.html' %}
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+</div>
+<script src="{% static 'js/main.js' %}"></script>
+{% block admin_scripts %}{% endblock %}
+</body>
+</html>

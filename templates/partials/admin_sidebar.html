@@ -1,0 +1,9 @@
+{% load i18n %}
+<nav class="space-y-2">
+    <a href="{% url 'core:dashboard' %}" class="btn btn-ghost w-full justify-start">{% trans "Dashboard" %}</a>
+    <a href="{% url 'catalog:index' %}" class="btn btn-ghost w-full justify-start">{% trans "Catalog" %}</a>
+    <a href="{% url 'orders:index' %}" class="btn btn-ghost w-full justify-start">{% trans "Orders" %}</a>
+    <a href="{% url 'payments:index' %}" class="btn btn-ghost w-full justify-start">{% trans "Payments" %}</a>
+    <a href="{% url 'delivery:index' %}" class="btn btn-ghost w-full justify-start">{% trans "Delivery" %}</a>
+    <a href="{% url 'reporting:index' %}" class="btn btn-ghost w-full justify-start">{% trans "Reporting" %}</a>
+</nav>

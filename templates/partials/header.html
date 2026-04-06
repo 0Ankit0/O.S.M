@@ -1,0 +1,14 @@
+{% load i18n %}
+<header class="navbar bg-base-100 border-b border-base-300 px-4">
+    <div class="flex-1">
+        <a href="{% url 'core:home' %}" class="btn btn-ghost text-xl">{% trans "Restaurant OMS" %}</a>
+    </div>
+    <nav class="flex-none">
+        <ul class="menu menu-horizontal gap-1 px-1">
+            <li><a href="{% url 'catalog:index' %}">{% trans "Menu" %}</a></li>
+            <li><a href="{% url 'orders:index' %}">{% trans "Orders" %}</a></li>
+            <li><a href="{% url 'accounts:index' %}">{% trans "Account" %}</a></li>
+            <li><a href="{% url 'core:dashboard' %}">{% trans "Admin" %}</a></li>
+        </ul>
+    </nav>
+</header>
