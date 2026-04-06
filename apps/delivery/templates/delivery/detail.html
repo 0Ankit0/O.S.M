@@ -1,0 +1,38 @@
+{% extends 'base_admin.html' %}
+{% load i18n %}
+
+{% block title %}{% trans 'Delivery Detail' %}{% endblock %}
+{% block page_title %}{% trans 'Delivery Detail' %}{% endblock %}
+
+{% block content %}
+<div class="grid gap-4">
+  <div class="card bg-base-100 border border-base-300 shadow-sm">
+    <div class="card-body">
+      <h2 class="card-title">{% trans 'Assignment' %} #{{ assignment.id }}</h2>
+      <p><strong>{% trans 'Order' %}:</strong> #{{ assignment.order_id }}</p>
+      <p><strong>{% trans 'Status' %}:</strong> {{ assignment.get_status_display }}</p>
+      <p><strong>{% trans 'Assignee' %}:</strong> {{ assignment.assignee|default:'-' }}</p>
+      <p><strong>{% trans 'Zone' %}:</strong> {{ assignment.zone.name }}</p>
+      <p><strong>{% trans 'ETA' %}:</strong> {{ assignment.eta_at|default:'-' }}</p>
+    </div>
+  </div>
+
+  <div class="card bg-base-100 border border-base-300 shadow-sm">
+    <div class="card-body">
+      <h3 class="card-title">{% trans 'Timeline' %}</h3>
+      <ul class="space-y-2">
+        {% for event in assignment.events.all %}
+          <li>
+            <span class="font-semibold">{{ event.created_at }}</span> —
+            {{ event.from_status|default:'-' }} → {{ event.to_status }}
+            {% if event.actor %}({{ event.actor }}){% endif %}
+            {% if event.note %}- {{ event.note }}{% endif %}
+          </li>
+        {% empty %}
+          <li>{% trans 'No timeline events yet.' %}</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</div>
+{% endblock %}

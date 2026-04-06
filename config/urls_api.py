@@ -61,6 +61,9 @@ urlpatterns = [
 
                 # Payments
                 path("payments/", include("payments.api.urls")),
+
+                # Delivery
+                path("delivery/", include("delivery.api.urls")),
             ]
         ),
     ),
