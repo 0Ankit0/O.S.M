@@ -1,0 +1,41 @@
+{% extends 'base_admin.html' %}
+{% load i18n %}
+
+{% block title %}{% trans 'Active Deliveries' %}{% endblock %}
+{% block page_title %}{% trans 'Active Deliveries' %}{% endblock %}
+
+{% block content %}
+<div class="card bg-base-100 border border-base-300 shadow-sm">
+  <div class="card-body">
+    <h2 class="card-title">{% trans 'Active Delivery Assignments' %}</h2>
+    <div class="overflow-x-auto">
+      <table class="table table-zebra">
+        <thead>
+          <tr>
+            <th>{% trans 'Order' %}</th>
+            <th>{% trans 'Status' %}</th>
+            <th>{% trans 'Assignee' %}</th>
+            <th>{% trans 'Zone' %}</th>
+            <th>{% trans 'ETA' %}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for assignment in assignments %}
+            <tr>
+              <td>#{{ assignment.order_id }}</td>
+              <td>{{ assignment.get_status_display }}</td>
+              <td>{{ assignment.assignee|default:'-' }}</td>
+              <td>{{ assignment.zone.name }}</td>
+              <td>{{ assignment.eta_at|default:'-' }}</td>
+              <td><a class="link" href="{% url 'delivery:detail' assignment.pk %}">{% trans 'View' %}</a></td>
+            </tr>
+          {% empty %}
+            <tr><td colspan="6">{% trans 'No active assignments found.' %}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}
