@@ -1,0 +1,15 @@
+{% extends 'base_user.html' %}
+
+{% block title %}Checkout{% endblock %}
+{% block page_title %}Checkout{% endblock %}
+
+{% block content %}
+<h2>Checkout</h2>
+<p>Subtotal: {{ cart.subtotal }}</p>
+<p>Use gateway = <code>stripe</code> or <code>khalti</code> to initiate online payment.</p>
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Submit order</button>
+</form>
+{% endblock %}
