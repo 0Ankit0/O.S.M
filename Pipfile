@@ -1,0 +1,51 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+django = "*"                                # Core web framework for building the application
+djangorestframework = "*"                   # REST API toolkit for Django, provides serializers, viewsets, etc.
+djangorestframework-simplejwt = "*"         # JWT authentication for DRF APIs
+django-filter = "*"                         # Advanced filtering for DRF API queries
+drf-spectacular = "*"                       # Automatic OpenAPI schema and documentation generation for DRF
+django-tailwind = "*"                       # Integration of Tailwind CSS with Django
+django-hashid-field = "*"                   # Hashids for Django models
+django-environ = "*"                        # Environment variables management for Django
+pillow = "*"                                # Image processing library for handling image uploads    
+boto3 = "*"                                 # AWS SDK for Python, used with django-storages for S3
+channels = "*"                              # Django Channels for handling WebSockets and asynchronous tasks    
+setuptools = "*"                            # Package development and distribution utilities
+celery = "*"                                # Distributed task queue for running background tasks
+django-celery-results = "*"                 # Results backend for Celery
+django-celery-beat = "*"                    # Beat scheduler for Celery
+inflection = "*"                            # Utility library for converting between singular and plural forms of words
+sentry-sdk = "*"                            # Sentry SDK for error tracking
+drf-access-policy = "*"                     # Access policy for DRF APIs
+pyotp = "*"                                 # OTP generation for authentication
+dj-stripe = "*"                             # Stripe integration for Django
+django-extensions = "*"                     # Django extensions for development
+drf-yasg = "*"                              # OpenAPI schema and documentation generation for DRF
+social-auth-app-django = "*"                # Social authentication for Django
+django-storages = "*"                       # Storage backends for Django, including S3 support
+django-hosts = "*"                          # Django hosts for multi-tenant support
+django-redis = "*"                          # Redis integration for Django
+django-ratelimit = "*"                      # Rate limiting for Django
+daphne = "*"                                # Daphne for WebSocket support
+redis = "*"                                 # Redis client for Python
+pydantic = "*"                              # Data validation using Python type hints
+social-auth-core = "*"                      # Core social authentication library
+psycopg2-binary = "*"                       # PostgreSQL adapter for Python
+whitenoise = "*"                            # WhiteNoise for serving static files in Django
+six = "*"                                   # Python 2/3 compatibility library used by social-auth-app-django
+openai = "*"                                # OpenAI integration for Django
+django-browser-reload = "*"                 # Django auto browser reload for development
+
+[dev-packages]
+ruff = "*"                                  # Fast Python linter and formatter
+mypy = "*"                                  # Static type checker for Python
+django-stubs = "*"                          # Type hints for Django
+pre-commit = "*"                            # Framework for managing pre-commit hooks
+
+[requires]
+python_version = "3.14"

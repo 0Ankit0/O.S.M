@@ -1,0 +1,119 @@
+{% extends "base/dashboard_base.html" %}
+
+{% block title %}Finances - Django Template{% endblock %}
+{% block page_title %}Finances{% endblock %}
+
+{% block content %}
+<!-- Current Plan -->
+<div class="card bg-base-100 shadow-sm mb-6">
+    <div class="card-body">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div>
+                <h2 class="card-title">Current Plan</h2>
+                <p class="text-3xl font-bold text-primary mt-2">Free Plan</p>
+                <p class="text-base-content/60">Basic features for getting started</p>
+            </div>
+            <div class="mt-4 md:mt-0">
+                <a href="{% url 'finances:subscription' %}" class="btn btn-primary">
+                    <i data-lucide="sparkles" class="w-4 h-4"></i>
+                    Upgrade Plan
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Payment Methods -->
+    <div class="card bg-base-100 shadow-sm">
+        <div class="card-body">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="card-title">Payment Methods</h3>
+                <a href="{% url 'finances:payment_methods' %}" class="btn btn-ghost btn-sm">Manage</a>
+            </div>
+
+            <div class="text-center py-8">
+                <i data-lucide="credit-card" class="w-12 h-12 mx-auto text-base-content/30 mb-4"></i>
+                <p class="text-base-content/60">No payment methods added</p>
+                <a href="{% url 'finances:payment_methods' %}" class="btn btn-primary btn-sm mt-4">
+                    Add Payment Method
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Billing History -->
+    <div class="card bg-base-100 shadow-sm">
+        <div class="card-body">
+            <h3 class="card-title mb-4">Billing History</h3>
+
+            <div class="text-center py-8">
+                <i data-lucide="receipt" class="w-12 h-12 mx-auto text-base-content/30 mb-4"></i>
+                <p class="text-base-content/60">No billing history</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Available Plans -->
+<div class="flex justify-between items-center mt-8 mb-6">
+    <h2 class="text-2xl font-bold">Available Plans</h2>
+    {% if user.is_staff %}
+    <a href="{% url 'finances:add_plan' %}" class="btn btn-sm btn-outline">
+        <i data-lucide="plus" class="w-4 h-4"></i>
+        Add Plan
+    </a>
+    {% endif %}
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    {% for plan in plans %}
+        {% for price in plan.prices.all %}
+        <div class="card shadow-sm {% if plan.name == 'Pro' %}bg-primary text-primary-content{% else %}bg-base-100{% endif %}">
+            <div class="card-body">
+                <div class="flex justify-between items-center">
+                    <h3 class="card-title">{{ plan.name }}</h3>
+                    {% if plan.name == 'Pro' %}
+                    <span class="badge badge-secondary">Popular</span>
+                    {% endif %}
+                </div>
+                <p class="text-3xl font-bold">
+                    {{ price.unit_amount_decimal|floatformat:0 }}
+                    <span class="text-sm font-normal opacity-80">/{{ price.currency|upper }}/{{ price.recurring.interval }}</span>
+                </p>
+                <p class="mt-2 opacity-80">{{ plan.description|default:"" }}</p>
+
+                <ul class="mt-4 space-y-2">
+                    {% if plan.features %}
+                        {% for feature in plan.features %}
+                        <li class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-4 h-4"></i>
+                            {{ feature }}
+                        </li>
+                        {% endfor %}
+                    {% else %}
+                        <li class="flex items-center gap-2">
+                            <i data-lucide="check" class="w-4 h-4"></i>
+                            Standard Features
+                        </li>
+                    {% endif %}
+                </ul>
+
+                <div class="card-actions mt-6">
+                    {% if plan.name == 'Free' %}
+                        <button class="btn btn-ghost btn-block" disabled>Current Plan</button>
+                    {% else %}
+                        <a href="{% url 'finances:payment_methods' %}?plan={{ price.id }}" class="btn {% if plan.name == 'Pro' %}btn-secondary{% else %}btn-primary{% endif %} btn-block">
+                            Upgrade to {{ plan.name }}
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% empty %}
+        <div class="col-span-3 text-center py-10">
+            <p class="text-base-content/60">No plans available at the moment.</p>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

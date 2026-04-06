@@ -1,21 +1,20 @@
 # Restaurant Order Management System
 
-This documentation set describes the restaurant-focused OMS implemented in this repository. The live product direction is a Sushi & More style storefront backed by a full internal operations platform for catalog management, checkout, fulfillment, delivery, returns, notifications, and analytics.
+This documentation set describes a Django-first restaurant OMS. The application is implemented as a single Django web platform that serves both backend business logic and frontend HTML through server-rendered templates, with Tailwind CSS providing the shared UI system.
 
 The source-of-truth stack is:
 
-- FastAPI backend
-- Next.js web application
-- Flutter mobile application
+- Django for backend logic, routing, forms, sessions, and template rendering
+- Tailwind CSS for the user-facing and admin-facing UI layers
 - PostgreSQL as the canonical datastore
-- Redis for idempotency, caching, and short-lived coordination
-- Celery for background workflows
-- Local or S3-compatible object storage for artifacts
+- Redis for caching, idempotency support, and short-lived coordination
+- Celery for background workflows and scheduled jobs
+- Local or S3-compatible object storage for uploaded and generated files
 - Provider abstractions for payments, notifications, analytics, and maps
 
 ## Product Shape
 
-The customer experience follows the reference storefront in [reference-site-analysis.md](requirements/reference-site-analysis.md):
+The customer experience is a menu-first restaurant storefront with:
 
 - restaurant landing page with direct order intent
 - featured products near the top
@@ -28,23 +27,38 @@ The OMS extends that storefront with:
 - saved delivery addresses and serviceability checks
 - owned cart and checkout
 - order history and milestone tracking
-- admin catalog workflows
-- fulfillment, delivery, and return operations
+- admin and staff operations
 - analytics and reporting foundations
 
 ## Technology Stack
 
 | Layer | Technology | Notes |
 |---|---|---|
-| Backend API | FastAPI | Modular OMS backend with domain-oriented routers, services, schemas, and models |
-| Web | Next.js | Customer storefront and admin/ops dashboards |
-| Mobile | Flutter | Customer-first mobile flows using the same OMS contracts |
-| Database | PostgreSQL | System of record for users, catalog, orders, fulfillment, deliveries, and returns |
-| Cache / coordination | Redis | Idempotency keys, hot-path caching, reservation timing, lightweight coordination |
-| Background jobs | Celery | Notifications, reservation expiry, exports, retries, reconciliation |
-| Object storage | Local or S3-compatible | Product images, proof-of-delivery evidence, generated reports |
+| Web application | Django | Handles routing, server-rendered templates, forms, sessions, auth, and domain orchestration |
+| Frontend styling | Tailwind CSS | Shared design tokens, responsive layout primitives, utility-first styling in templates |
+| Background jobs | Celery | Notifications, exports, retries, reconciliation, scheduled resets |
+| Database | PostgreSQL | System of record for users, catalog, orders, deliveries, refunds, and reports |
+| Cache / coordination | Redis | Caching, lightweight coordination, idempotency support, hot-path state |
+| Object storage | Local or S3-compatible | Product images, proof-of-delivery evidence, generated reports and invoices |
 | Analytics | Provider abstraction | PostHog, Mixpanel, and future adapters through one shared interface |
-| Communications | Provider abstraction | Email, SMS, push, and in-app notifications |
+| Communications | Provider abstraction | Email-first notifications with future adapter support |
+
+## Frontend Layout Contracts
+
+The frontend is organized around two base templates:
+
+- `templates/base_user.html` for storefront, account, cart, checkout, and order pages
+- `templates/base_admin.html` for staff and admin dashboards, catalog operations, reporting, and configuration
+
+Shared partials live under a common templates partials area and cover:
+
+- header and footer
+- sidebar navigation
+- alerts and flash messages
+- breadcrumbs
+- page titles and contextual actions
+
+Every page template extends one of the two base layouts. Full-page chrome should not be duplicated in leaf templates.
 
 ## Documentation Structure
 
@@ -69,12 +83,12 @@ docs/system-design/
 
 ## Key Implementation Themes
 
-- Menu-first restaurant storefront, not a generic marketplace
-- FastAPI as the single backend runtime
-- OMS domain modules for catalog, commerce, orders, fulfillment, delivery, returns, and reporting
-- Customer-first mobile in the current implementation wave
-- Web-first staff and admin operations
-- Analytics designed as a switchable provider layer instead of a vendor lock-in point
+- Django as the single runtime for both frontend and backend
+- Tailwind-powered server-rendered UI, not a separate SPA frontend
+- Two intentional layout shells: customer-facing and admin-facing
+- Domain-oriented Django apps for catalog, commerce, orders, delivery, notifications, and reporting
+- PostgreSQL as canonical business data
+- Redis and Celery as supporting infrastructure, not the source of truth
 
 ## Recommended Reading Order
 
@@ -83,8 +97,8 @@ docs/system-design/
 3. [reference-site-analysis.md](requirements/reference-site-analysis.md)
 4. [architecture-diagram.md](high-level-design/architecture-diagram.md)
 5. [cloud-architecture.md](infrastructure/cloud-architecture.md)
-6. [analytics-architecture.md](implementation/analytics-architecture.md)
+6. [implementation-playbook.md](implementation/implementation-playbook.md)
 
 ## Documentation Note
 
-Some older detailed analysis documents may still reference AWS-native terms from the original planning phase. When that conflicts with the codebase, the implementation in this repository and the updated architecture documents take precedence.
+Some older supporting documents may still describe legacy cloud-native or multi-client assumptions. When that conflicts with this overview, the Django monolith architecture and the updated implementation documents take precedence.

@@ -2,101 +2,110 @@
 
 ## Overview
 
-This document describes the shipped application architecture for the restaurant-focused Order Management System. The implementation is built around a single FastAPI backend, a Next.js web application, and a Flutter mobile application. Cloud vendors remain optional deployment targets and provider integrations, not the source of truth for runtime design.
+This document describes the current target architecture for the restaurant-focused Order Management System. The implementation is a Django monolith that serves both backend behavior and frontend HTML, with Tailwind CSS used for the customer and admin interfaces.
 
 ## Solution Architecture
 
 ```mermaid
 graph TB
-    subgraph Clients["Client Applications"]
-        Web["Next.js Web App<br/>customer + admin/ops"]
-        Mobile["Flutter Mobile App<br/>customer-first flows"]
+    Browser["Customer and staff browsers"]
+
+    subgraph Edge["Edge"]
+        Proxy["Reverse proxy / load balancer"]
+        Static["Static and media delivery"]
     end
 
-    subgraph API["Application Layer"]
-        FastAPI["FastAPI Backend<br/>/api/v1"]
-        WS["WebSocket / notifications"]
-        Celery["Celery Workers<br/>async jobs"]
+    subgraph App["Application Layer"]
+        Django["Django application<br/>views · forms · templates · sessions · admin/staff flows"]
+        Celery["Celery workers<br/>async jobs"]
+        Beat["Celery beat<br/>scheduled jobs"]
     end
 
-    subgraph Domain["OMS Modules"]
-        IAM["IAM / Auth / RBAC"]
-        Catalog["Catalog<br/>categories · products · variants"]
-        Commerce["Commerce<br/>cart · addresses · checkout · coupons"]
-        Orders["Orders<br/>state machine · milestones · idempotency"]
-        Ops["Operations<br/>warehouses · fulfillment · deliveries · returns"]
-        Analytics["Analytics Abstraction<br/>provider-agnostic events"]
-        Comms["Communications<br/>email · sms · push"]
+    subgraph Domain["OMS Django Apps"]
+        Accounts["Accounts and RBAC"]
+        Catalog["Catalog and merchandising"]
+        Commerce["Cart, checkout, coupons, addresses"]
+        Orders["Orders and milestones"]
+        Delivery["Delivery zones, assignments, POD"]
+        Notifications["Notifications and templates"]
+        Reporting["Analytics, exports, invoices"]
     end
 
     subgraph Data["Core Data"]
         PG[("PostgreSQL<br/>canonical business data")]
-        Redis[("Redis<br/>cache · idempotency · hot-path state")]
+        Redis[("Redis<br/>cache · idempotency support · coordination")]
         ObjectStore[("Local / S3-compatible storage<br/>images · POD · exports")]
     end
 
-    subgraph Providers["Optional Providers"]
-        Payments["Payments<br/>Stripe · Khalti · eSewa · PayPal · COD"]
-        Notify["Notifications<br/>SMTP · Resend · SES · Twilio · FCM"]
-        AnalyticsProviders["Analytics<br/>PostHog · Mixpanel · future adapters"]
+    subgraph Providers["External Providers"]
+        Payments["Payments<br/>Stripe"]
+        Notify["Email providers"]
+        Analytics["Analytics providers"]
         Maps["Maps / geocoding"]
     end
 
-    Web --> FastAPI
-    Web --> WS
-    Mobile --> FastAPI
-    Mobile --> WS
+    Browser --> Proxy
+    Proxy --> Django
+    Proxy --> Static
 
-    FastAPI --> IAM
-    FastAPI --> Catalog
-    FastAPI --> Commerce
-    FastAPI --> Orders
-    FastAPI --> Ops
-    FastAPI --> Analytics
-    FastAPI --> Comms
+    Django --> Accounts
+    Django --> Catalog
+    Django --> Commerce
+    Django --> Orders
+    Django --> Delivery
+    Django --> Notifications
+    Django --> Reporting
 
+    Accounts --> PG
     Catalog --> PG
     Commerce --> PG
     Orders --> PG
-    Ops --> PG
-    IAM --> PG
+    Delivery --> PG
+    Notifications --> PG
+    Reporting --> PG
 
-    Commerce --> Redis
-    Orders --> Redis
-    Ops --> Redis
+    Django --> Redis
+    Celery --> Redis
 
-    Ops --> ObjectStore
-    Orders --> Celery
-    Ops --> Celery
-    Comms --> Celery
+    Django --> ObjectStore
+    Celery --> ObjectStore
 
     Orders --> Payments
-    Comms --> Notify
-    Analytics --> AnalyticsProviders
-    Ops --> Maps
+    Notifications --> Notify
+    Reporting --> Analytics
+    Delivery --> Maps
+
+    Django --> Celery
+    Beat --> Celery
 ```
 
 ## Module Responsibilities
 
 | Module | Runtime | Responsibilities |
 |---|---|---|
-| Web App | Next.js | Restaurant storefront, customer account flows, admin and operations dashboards |
-| Mobile App | Flutter | Customer menu browsing, cart, checkout, orders, profile, addresses |
-| FastAPI Backend | Python / FastAPI | Public API, OMS domain logic, auth, RBAC, validation, orchestration |
-| Celery Workers | Python / Celery | Reservation expiry, notifications, exports, reconciliation, deferred operations |
-| PostgreSQL | SQLModel / PostgreSQL | System of record for customers, catalog, orders, fulfillment, delivery, returns |
-| Redis | Redis | Idempotency keys, lightweight coordination, cached hot-path data |
-| Object Storage | Local or S3-compatible | Product images, proof-of-delivery artifacts, generated exports |
+| Django Web App | Python / Django | Storefront, customer account flows, staff/admin dashboards, forms, permissions, domain orchestration |
+| Tailwind Template Layer | Django templates + Tailwind | Shared design system, layout shells, partials, responsive UI primitives |
+| Celery Workers | Python / Celery | Notifications, exports, retries, reconciliation, scheduled maintenance jobs |
+| PostgreSQL | PostgreSQL | System of record for customers, catalog, orders, delivery, refunds, and reports |
+| Redis | Redis | Idempotency support, cache, and lightweight coordination |
+| Object Storage | Local or S3-compatible | Product images, POD artifacts, generated invoices and reports |
+
+## Frontend Layout Model
+
+| Layout | Template | Audience | Responsibilities |
+|---|---|---|---|
+| User layout | `templates/base_user.html` | Customers and public visitors | Marketing header, menu browsing, account links, cart access, soft brand presentation |
+| Admin layout | `templates/base_admin.html` | Staff and admins | Sidebar navigation, utility header, breadcrumbs, dense tables/forms, permission-aware operations |
 
 ## Cross-Cutting Concerns
 
 | Concern | Implementation |
 |---|---|
-| Authentication | FastAPI JWT/session model with existing auth module and optional OTP/social login |
-| Authorization | Role-based access enforced in FastAPI and reflected in web/mobile route handling |
-| Idempotency | `Idempotency-Key` on OMS mutations, backed by Redis and persisted OMS state |
-| State Management | Explicit order, fulfillment, delivery, and return transitions in the OMS service layer |
-| Analytics | Provider-agnostic adapter layer for backend, web, and mobile |
-| Notifications | Provider abstraction for email, SMS, push, and in-app delivery |
-| Storage | Local-first object storage with S3-compatible deployment option |
-| Observability | Structured logging, metrics, and analytics/reporting endpoints inside the app stack |
+| Authentication | Django session auth with login, logout, password reset, and optional MFA extensions |
+| Authorization | Django groups, permissions, and staff/admin access checks enforced in views and templates |
+| Layouts | Template inheritance with shared partials and block contracts for `base_user.html` and `base_admin.html` |
+| Styling | Tailwind CSS with shared tokens for spacing, color, typography, and responsive breakpoints |
+| Background work | Celery-backed async jobs and scheduled tasks |
+| Notifications | Provider abstraction for email delivery and template rendering |
+| Storage | Local-first object storage with optional S3-compatible deployment |
+| Observability | Structured logging, metrics, health checks, and reporting instrumentation |

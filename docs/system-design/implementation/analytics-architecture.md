@@ -2,7 +2,7 @@
 
 ## Overview
 
-The OMS analytics layer is provider-agnostic across backend, web, and mobile. Product code talks to one analytics service contract, while provider-specific SDK logic stays isolated inside adapters.
+The OMS analytics layer is provider-agnostic across the Django application, background workers, and server-rendered web experience. Product code talks to one analytics service contract, while provider-specific SDK logic stays isolated inside adapters.
 
 PostHog and Mixpanel are first-class adapters today, and new providers can be added through a registry entry instead of changing feature code.
 
@@ -11,7 +11,7 @@ PostHog and Mixpanel are first-class adapters today, and new providers can be ad
 - Keep OMS features decoupled from vendor SDKs.
 - Allow provider switching by configuration.
 - Keep analytics disabled mode safe and silent.
-- Use one mental model across FastAPI, Next.js, and Flutter.
+- Use one mental model across Django views, template-driven interactions, and background tasks.
 - Keep feature-flag reads behind the same contract where supported.
 
 ## Common Contract
@@ -39,12 +39,12 @@ Preferred environment variables:
 - `ANALYTICS_API_KEY`
 - `ANALYTICS_HOST`
 
-Frontend equivalents:
+Web equivalents:
 
-- `NEXT_PUBLIC_ANALYTICS_ENABLED`
-- `NEXT_PUBLIC_ANALYTICS_PROVIDER`
-- `NEXT_PUBLIC_ANALYTICS_API_KEY`
-- `NEXT_PUBLIC_ANALYTICS_HOST`
+- `ANALYTICS_WEB_ENABLED`
+- `ANALYTICS_WEB_PROVIDER`
+- `ANALYTICS_WEB_API_KEY`
+- `ANALYTICS_WEB_HOST`
 
 ### Compatibility fallbacks
 
@@ -61,17 +61,11 @@ Provider-specific variables remain supported:
 2. Implement `AnalyticsProvider`.
 3. Register the builder in `backend/src/apps/analytics/factory.py`.
 
-### Frontend
+### Web layer
 
-1. Add `frontend/src/lib/analytics/adapters/<provider>.ts`.
-2. Implement `AnalyticsAdapter`.
-3. Register the builder in `frontend/src/lib/analytics/service.ts`.
-
-### Mobile
-
-1. Add `mobile/lib/core/analytics/adapters/<provider>_adapter.dart`.
-2. Implement `AnalyticsAdapter`.
-3. Register the builder in `mobile/lib/core/analytics/analytics_provider.dart`.
+1. Add an analytics adapter module under the Django project's web analytics package.
+2. Implement the shared analytics adapter contract.
+3. Register the builder in the analytics service registry used by views, templates, and background tasks.
 
 ## OMS Event Naming
 

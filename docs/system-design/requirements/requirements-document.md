@@ -4,7 +4,7 @@
 
 ### 1.1 Purpose
 
-This document defines the functional and non-functional requirements for a restaurant-focused Order Management System (OMS) implemented with FastAPI, Next.js, and Flutter. The platform is designed for a restaurant operating in Germany, managing the complete menu-to-delivery lifecycle using internal delivery personnel. The system prioritises menu-first browsing, zone-based delivery pricing, and a streamlined post-delivery settlement model where meals are final once prepared.
+This document defines the functional and non-functional requirements for a restaurant-focused Order Management System (OMS) implemented as a Django web platform. Django serves both backend business logic and frontend HTML through server-rendered templates, with Tailwind CSS providing the shared UI layer for customer and admin experiences. The platform is designed for a restaurant operating in Germany, managing the complete menu-to-delivery lifecycle using internal delivery personnel. The system prioritises menu-first browsing, zone-based delivery pricing, and a streamlined post-delivery settlement model where meals are final once prepared.
 
 ### 1.2 Scope
 
@@ -23,6 +23,7 @@ The system covers:
 - Internationalisation: German and English (i18n)
 - Review and rating system (per completed order)
 - Administrative operations and platform configuration
+- Custom Django template layouts for both customer-facing and admin-facing pages
 
 **Out of scope:**
 - Inventory / stock tracking
@@ -76,7 +77,7 @@ The system covers:
 - Customers may update their default address only when it is not linked to an active order
 
 #### FR-CM-004: Authentication
-- System shall implement JWT-based authentication via the FastAPI auth module
+- System shall implement Django authentication with session-based browser login
 - System shall support session management with configurable TTL
 - System shall enforce password complexity policies (min 8 chars, mixed case, digit, symbol)
 - System shall support multi-factor authentication for customer accounts
@@ -368,6 +369,16 @@ The system covers:
 - Admin shall manage promotional banners and announcements
 - Admin shall schedule promotional campaigns with start/end dates
 
+#### FR-AM-005: Admin Layout Structure
+- Staff and admin pages shall use a dedicated Django template layout separate from customer-facing pages
+- The admin layout shall provide sidebar navigation, top utility bar, breadcrumbs, primary page actions, and a dense content region for tables, forms, and dashboards
+- Admin navigation shall be permission-aware so users only see sections they are allowed to access
+
+#### FR-AM-006: User Layout Structure
+- Public and customer pages shall use a dedicated Django template layout for storefront, account, cart, checkout, and order-tracking flows
+- The user layout shall provide storefront navigation, account access, cart access, and a responsive content area optimized for menu browsing and checkout
+- Page templates shall extend a shared base layout and must not duplicate full-page navigation or footer structure
+
 ---
 
 ## 3. Non-Functional Requirements
@@ -384,7 +395,7 @@ The system covers:
 | POD photo upload | < 5 seconds for 5 MB image |
 
 ### 3.2 Scalability
-- FastAPI API instances shall scale horizontally behind a reverse proxy or load balancer
+- Django web instances shall scale horizontally behind a reverse proxy or load balancer
 - Celery workers shall scale independently by queue type and workload
 - PostgreSQL replicas may be added for reporting and analytics queries
 - Redis deployment may be scaled for cache and idempotency workloads
@@ -420,8 +431,9 @@ The system covers:
 - Feature flags and runtime toggles shall be supported through the application configuration layer
 
 ### 3.7 Usability
-- Mobile-responsive customer portal in Next.js
-- Lightweight mobile-optimised interface for delivery staff (Flutter)
+- Mobile-responsive customer-facing web experience rendered by Django templates
+- Mobile-responsive admin and staff portal rendered by Django templates
+- Tailwind-based layout system with two distinct page shells: one for users and one for admin/staff users
 - WCAG 2.1 AA accessibility compliance
 - **Multi-language support: German (de) and English (en)** with locale-aware formatting for EUR currency, dates, and numbers
 
@@ -430,13 +442,13 @@ The system covers:
 ## 4. System Constraints
 
 ### 4.1 Technical Constraints
-- FastAPI remains the primary backend runtime
-- Next.js remains the primary web runtime
-- Flutter remains the primary mobile runtime
+- Django remains the primary application runtime for both backend and frontend delivery
+- Django templates remain the primary frontend rendering mechanism
+- Tailwind CSS remains the standard styling system for customer and admin pages
 - PostgreSQL remains the canonical transactional datastore
 - Redis remains auxiliary for cache, idempotency, and hot-path coordination
 - Background workflows shall run through Celery or equivalent queue-backed workers
-- API-first design with OpenAPI 3.1 specification
+- HTML-first web flows with selective JSON endpoints for progressive enhancement and integrations
 - Google Maps Distance Matrix API for delivery ETA calculations
 - Stripe as the sole payment gateway
 

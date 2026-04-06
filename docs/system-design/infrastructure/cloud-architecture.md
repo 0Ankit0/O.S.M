@@ -2,22 +2,21 @@
 
 ## Overview
 
-The OMS is deployment-agnostic at the application layer. The concrete implementation in this repository is FastAPI, Next.js, and Flutter, with PostgreSQL, Redis, Celery, and object storage as the core infrastructure building blocks. Cloud providers are selected through adapters and deployment configuration, not through hardcoded architectural assumptions.
+The OMS is deployment-agnostic at the application layer. The concrete implementation described by this documentation is a Django web platform with Tailwind-powered server-rendered templates, PostgreSQL, Redis, Celery, and object storage as the core infrastructure building blocks.
 
 ## Runtime Topology
 
 ```mermaid
 graph TB
-    Internet["Users / staff / mobile devices"]
+    Internet["Customers and staff"]
 
     subgraph Edge["Edge"]
-        CDN["CDN / static hosting<br/>optional"]
+        CDN["CDN for static assets<br/>optional"]
         ReverseProxy["Reverse proxy / load balancer"]
     end
 
     subgraph App["Application Runtime"]
-        Next["Next.js web runtime"]
-        API["FastAPI application"]
+        Django["Django app<br/>views · templates · forms · sessions"]
         Worker["Celery worker pool"]
         Beat["Celery beat / scheduled jobs"]
     end
@@ -30,88 +29,86 @@ graph TB
 
     subgraph External["Provider Integrations"]
         Payment["Payment providers"]
-        Notification["Email / SMS / Push providers"]
+        Notification["Email providers"]
         Analytics["Analytics providers"]
         Maps["Maps / geocoding providers"]
     end
 
     Internet --> CDN
     Internet --> ReverseProxy
-    CDN --> Next
-    ReverseProxy --> API
-    Next --> API
-    API --> PG
-    API --> Redis
-    API --> Storage
-    API --> Payment
-    API --> Notification
-    API --> Analytics
+    CDN --> ReverseProxy
+    ReverseProxy --> Django
+    Django --> PG
+    Django --> Redis
+    Django --> Storage
+    Django --> Payment
+    Django --> Notification
+    Django --> Analytics
+    Django --> Maps
+    Django --> Worker
     Worker --> PG
     Worker --> Redis
     Worker --> Storage
     Worker --> Notification
     Worker --> Payment
     Beat --> Worker
-    API --> Maps
 ```
 
 ## Primary Infrastructure Contracts
 
 | Concern | Primary Choice | Notes |
 |---|---|---|
-| Transactional data | PostgreSQL | Canonical store for catalog, orders, warehouse, delivery, returns, RBAC |
-| Cache and coordination | Redis | Idempotency, reservation TTLs, rate limiting, short-lived state |
-| Background work | Celery | Notifications, reservation expiry, exports, retries, reconciliation |
-| Binary assets | Local storage or S3-compatible bucket | Product media, POD evidence, report files |
-| Frontend hosting | Next.js runtime or exported deployment | Can sit behind any CDN or reverse proxy |
-| Mobile distribution | Flutter app stores / internal builds | Same API contracts as web |
+| Transactional data | PostgreSQL | Canonical store for catalog, orders, delivery, refunds, reporting, and RBAC |
+| Cache and coordination | Redis | Caching, idempotency support, rate limiting, short-lived state |
+| Background work | Celery | Notifications, exports, retries, reconciliation, scheduled resets |
+| Binary assets | Local storage or S3-compatible bucket | Product media, POD evidence, report files, invoices |
+| Web hosting | Django application runtime | Served behind a reverse proxy with static and media file handling |
+| Frontend assets | Tailwind-generated CSS and static files | Delivered through Django static files and optional CDN |
 
 ## Deployment Modes
 
 ### Local Development
 
-- FastAPI app served locally
-- Next.js app served locally
-- Flutter app pointed at local API
+- Django app served locally
+- Tailwind assets built locally and collected as static files
 - PostgreSQL and Redis via local containers or local services
+- Celery workers and scheduler running beside the web app
 - Object storage backed by filesystem
 
 ### Single-Environment Production
 
-- Reverse proxy in front of FastAPI and Next.js
+- Reverse proxy in front of the Django application
 - Dedicated PostgreSQL instance with backups
-- Redis for cache and idempotency
-- Celery workers and scheduler running separately from the API
+- Redis for cache and idempotency support
+- Celery workers and scheduler running separately from web processes
 - Local or S3-compatible object storage
+- Static and media routing configured at the proxy or CDN layer
 
 ### Scaled Production
 
-- Multiple FastAPI instances behind a load balancer
+- Multiple Django application instances behind a load balancer
 - Multiple worker replicas by queue type
 - Managed PostgreSQL with replicas if needed for reporting
 - Managed Redis
-- CDN in front of static assets and the web frontend
+- CDN in front of static assets
 - Optional S3-compatible object storage and external analytics providers
 
 ## OMS-Specific Background Jobs
 
 | Job | Trigger | Result |
 |---|---|---|
-| Inventory reservation expiry | Scheduled / TTL-driven | Release reserved stock for stale checkout sessions |
-| Notification dispatch | Domain events | Send order, delivery, and return updates |
-| Manifest / export generation | User request or schedule | Produce downloadable operational files |
+| Product availability reset | Scheduled | Restore daily availability defaults for the next service day |
+| Notification dispatch | Domain events and admin actions | Send order, delivery, refund, and broadcast emails |
+| Report and export generation | User request or schedule | Produce XLSX, CSV, PDF, and printable files |
 | Payment reconciliation | Scheduled | Reconcile provider status with OMS records |
-| Low-stock alerting | Threshold breach | Notify operations users |
-| Deferred refund follow-up | Return review / failure retry | Retry or escalate refund state |
+| ETA refresh | Order events and delivery updates | Refresh customer-visible timing estimates |
+| Deferred refund follow-up | Retry policy | Retry or escalate refund state |
 
-## Provider Strategy
+## Frontend Delivery Notes
 
-The application exposes provider interfaces for:
+The web UI is server-rendered by Django and organized around two layout shells:
 
-- payments
-- notifications
-- analytics
-- object storage
-- maps and geocoding
+- `base_user.html` for public and customer pages
+- `base_admin.html` for staff and admin pages
 
-This keeps PostHog, Mixpanel, Stripe, SES, Twilio, S3-compatible storage, and future providers swappable without changing OMS domain call sites.
+Tailwind styles both layouts through shared tokens and utility classes. Static CSS, JavaScript, and image assets should be packaged through Django static files and optionally served via CDN.

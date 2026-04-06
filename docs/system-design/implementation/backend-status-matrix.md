@@ -1,89 +1,54 @@
 # Backend Status Matrix
 
-This matrix reflects the FastAPI backend that exists in this repository today against the updated restaurant OMS requirements. The runtime is a single FastAPI application with OMS domain modules, PostgreSQL as the canonical datastore, Redis for idempotency and hot-path support, Celery for background workflows, and provider abstractions for payments, communications, analytics, and storage.
+This matrix reflects the documented Django target for the restaurant OMS. Django is the single runtime for storefront, customer account flows, and staff/admin operations. PostgreSQL is the canonical datastore, Redis supports caching and idempotency, Celery runs background workflows, and Tailwind powers the server-rendered UI.
 
 Status labels:
 
-- `core`: implemented and already part of the working backbone
-- `in progress`: main flow works, but edge cases or surrounding tooling still need more depth
-- `planned`: documented next step, not yet implemented in this codebase
-- `removed`: previously planned; explicitly out of scope for this restaurant system
+- `core`: part of the documented platform backbone
+- `in progress`: main flow is defined but still needs implementation depth
+- `planned`: documented next step, not yet delivered
+- `removed`: explicitly out of scope for this restaurant system
 
 | Area | Capability | Status |
 |---|---|---|
-| Auth | JWT-based auth, session refresh, token tracking, user profile endpoints | `core` |
-| Auth | OTP / MFA support and account security controls | `core` |
-| Catalog | Category CRUD (unlimited depth hierarchy) | `core` |
+| Auth | Django session auth, login/logout, password reset | `core` |
+| Auth | Role-based access via Django groups and permissions | `core` |
+| Auth | Staff/admin route protection and permission-aware navigation | `core` |
+| Frontend | `base_user.html` for storefront and customer pages | `core` |
+| Frontend | `base_admin.html` for staff/admin pages | `core` |
+| Frontend | Shared partials for header, footer, sidebar, alerts, breadcrumbs | `core` |
+| Frontend | Tailwind tokenized design system across both layouts | `in progress` |
+| Catalog | Category CRUD and merchandising flows | `core` |
 | Catalog | Product CRUD with variants, featured flags, tags, pricing | `core` |
-| Catalog | Product **published** toggle (inline from list) | `in progress` |
-| Catalog | Product **daily availability** toggle (per-day on/off) | `planned` |
-| Catalog | Customer catalog browsing — published + available today only | `in progress` |
-| Customer | Address CRUD with serviceability checks and default address handling | `core` |
-| Customer | Address lock after order initiation | `in progress` |
+| Catalog | Product published toggle from admin list | `in progress` |
+| Catalog | Product daily availability toggle | `planned` |
+| Customer | Address CRUD with serviceability checks and defaults | `core` |
 | Cart | Add, update, remove, and view cart items | `core` |
-| Cart | Coupon-aware cart totals and price snapshotting | `core` |
-| Cart | Zone-based delivery fee applied at cart/checkout | `in progress` |
-| Checkout | Checkout endpoint with `Idempotency-Key` enforcement | `core` |
-| Checkout | Address lock on checkout confirmation | `in progress` |
+| Cart | Async cart refresh endpoints for progressive enhancement | `in progress` |
+| Checkout | Server-rendered checkout with payment initiation | `core` |
 | Orders | Order creation, listing, detail view, cancellation | `core` |
-| Orders | Milestone recording and guarded state transitions | `core` |
-| Orders | Google Maps Distance Matrix ETA on order detail | `planned` |
-| Delivery | Delivery assignment creation during checkout bootstrap | `core` |
-| Delivery | Delivery status updates with **GPS lat/lon capture** per update | `planned` |
-| Delivery | Reassignment and failed-delivery handling | `core` |
-| Delivery | Proof-of-delivery: signature **or** photo required before `Delivered` | `in progress` |
-| Delivery | Delivery zone management with per-zone fee | `core` |
-| Refunds | Admin refund request dashboard (approve / deny) | `planned` |
-| Refunds | Full-order Stripe refund on admin approval (no partial, no automatic) | `planned` |
-| Reviews | Customer order review and rating (1–5, per delivered order) | `planned` |
-| Reviews | Admin review moderation (hide/flag) | `planned` |
-| Reviews | Average rating and review count on storefront | `planned` |
+| Orders | Timeline and status tracking | `core` |
+| Delivery | Delivery status updates with GPS metadata | `planned` |
+| Delivery | Proof-of-delivery upload before `Delivered` | `in progress` |
+| Refunds | Admin refund review flow in admin layout | `planned` |
 | Notifications | Email-only transactional notifications | `in progress` |
-| Notifications | Admin custom message broadcast (compose + segment + schedule) | `planned` |
-| Notifications | SMS channel present but disabled (`SMS_ENABLED=false`) | `planned` |
-| Notifications | Notification templates with i18n (de/en) support | `planned` |
-| Payments | Stripe integration for credit/debit cards and digital wallets | `in progress` |
-| Payments | Payment reconciliation reports | `in progress` |
-| i18n | German (de) and English (en) language toggle in web and mobile | `planned` |
-| i18n | EUR locale formatting (currency, dates, numbers) per selected language | `planned` |
-| Reports | Weekly auto-generated summary report (Mon–Sun) | `planned` |
-| Reports | Excel (XLSX), CSV, PDF export for reports | `planned` |
-| Reports | 80 mm thermal receipt print layout | `planned` |
-| Reports | PDF invoice generation and print | `planned` |
-| Analytics | Provider-agnostic analytics base across backend, web, and mobile | `core` |
-| Analytics | OMS event taxonomy for catalog, cart, checkout, order, delivery, refund, admin | `core` |
-| Admin / Ops | Overview metrics, delivery-zone list | `core` |
-| Admin / Ops | Product admin updates, publish/availability toggles | `in progress` |
-| Audit | Audit log for all admin and staff actions | `in progress` |
-| Inventory | Stock tracking, reservations, low-stock alerts | `removed` |
-| Fulfillment | Warehouse pick-pack-ship workflow | `removed` |
-| Returns | Return pickup by delivery staff | `removed` |
-| Returns | Warehouse inspection and partial accept | `removed` |
-| Payments | Khalti gateway | `removed` |
-| Payments | Partial refunds | `removed` |
-
-## Verified OMS Flows
-
-The backend currently has integration coverage for:
-
-- category and product setup
-- address creation
-- cart add and coupon application
-- checkout with idempotent replay
-- order listing and cancellation
-- delivery status updates
-- proof-of-delivery submission
+| Notifications | Admin custom message broadcast | `planned` |
+| Notifications | Editable notification templates | `planned` |
+| Payments | Stripe integration | `in progress` |
+| Payments | Reconciliation reports | `planned` |
+| Reporting | Dashboard metrics and exports | `planned` |
+| Reporting | PDF invoice and 80 mm receipt generation | `planned` |
+| i18n | German and English language support in templates and emails | `planned` |
+| Analytics | Provider-agnostic business event taxonomy | `core` |
+| Inventory | Stock tracking and reservations | `removed` |
+| Fulfillment | Warehouse pick-pack workflows | `removed` |
+| Returns | Warehouse return inspection workflow | `removed` |
+| Mobile | Separate mobile app as current product surface | `removed` |
 
 ## Current Gaps Worth Prioritising
 
-1. GPS coordinate capture on every delivery status update
-2. Admin refund approval dashboard (no automatic refund)
-3. Daily product availability toggle and auto-reset via Celery
-4. Product published toggle inline from the admin product list
-5. i18n: German/English language toggle with EUR locale formatting
-6. Google Maps ETA integration on order tracking
-7. Weekly report generation (Celery scheduled task)
-8. Excel (XLSX) + PDF export and 80 mm thermal receipt printing
-9. Customer order review and rating module
-10. Admin custom notification broadcast
-11. Address lock enforcement after checkout confirmation
+1. Finalize the Tailwind design tokens and responsive rules for both layouts.
+2. Document child template conventions for storefront, account, and dashboard pages.
+3. Build admin refund review and notification management inside the custom admin shell.
+4. Add delivery GPS capture, ETA refresh, and POD enforcement details.
+5. Complete i18n coverage for templates, emails, and locale-aware formatting.

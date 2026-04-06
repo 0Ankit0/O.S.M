@@ -1,0 +1,345 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% load i18n %}
+
+{% block body %}
+<div class="drawer lg:drawer-open">
+    <input id="drawer-toggle" type="checkbox" class="drawer-toggle" />
+    
+    <!-- Page Content -->
+    <div class="drawer-content flex flex-col">
+        <!-- Navbar -->
+        <div class="navbar bg-base-100 shadow-sm border-b border-base-300">
+            <div class="flex-none">
+                <label for="drawer-toggle" class="btn btn-square btn-ghost">
+                    <i data-lucide="menu" class="w-5 h-5"></i>
+                </label>
+            </div>
+            <div class="flex-1">
+                <span class="text-xl font-bold px-4">{% block page_title %}{% trans "Dashboard" %}{% endblock %}</span>
+            </div>
+            <div class="flex-none gap-2">
+                <!-- Notifications -->
+                <div class="dropdown dropdown-end" x-data="{ open: false }">
+                    <button @click="open = !open" class="btn btn-ghost btn-circle">
+                        <div class="indicator">
+                            <i data-lucide="bell" class="w-5 h-5"></i>
+                            {% if unread_count %}
+                            <span class="badge badge-sm badge-primary indicator-item">{{ unread_count }}</span>
+                            {% endif %}
+                        </div>
+                    </button>
+                    <div x-show="open" @click.away="open = false"
+                         class="dropdown-content z-[1] menu p-2 shadow-lg bg-base-100 rounded-box w-80 mt-3">
+                        <div class="flex justify-between items-center px-4 py-2 border-b border-base-200">
+                            <span class="font-semibold">{% trans "Notifications" %}</span>
+                            <a href="{% url 'notifications:list' %}" class="text-sm text-primary">{% trans "View all" %}</a>
+                        </div>
+                        <div class="max-h-64 overflow-y-auto">
+                            {% for notification in notifications|slice:":5" %}
+                            <div class="px-4 py-2 hover:bg-base-200 {% if not notification.is_read %}bg-primary/5{% endif %}">
+                                <p class="text-sm">{{ notification.type }}</p>
+                                <p class="text-xs text-base-content/60">{{ notification.created_at|timesince }} ago</p>
+                            </div>
+                            {% empty %}
+                            <p class="px-4 py-8 text-center text-base-content/60">{% trans "No notifications" %}</p>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- User Menu -->
+                <div class="dropdown dropdown-end">
+                    <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar placeholder">
+                        <div class="menu-active rounded-full w-10">
+                            <span>{{ user.first_name|slice:":1"|upper }}{{ user.last_name|slice:":1"|upper }}</span>
+                        </div>
+                    </div>
+                    <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow-lg bg-base-100 rounded-box w-52 mt-3">
+                        <li class="menu-title">
+                            <span>{{ user.email }}</span>
+                        </li>
+                        <li><a href="{% url 'iam:settings' %}"><i data-lucide="settings" class="w-4 h-4"></i> {% trans "Settings" %}</a></li>
+                        <li><a href="{% url 'iam:logout' %}"><i data-lucide="log-out" class="w-4 h-4"></i> {% trans "Logout" %}</a></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <main class="flex-1 p-6 bg-base-200">
+            {% if messages %}
+            <div class="toast toast-top toast-end z-50">
+                {% for message in messages %}
+                <div x-data="{ show: true }" 
+                     x-show="show" 
+                     x-init="setTimeout(() => show = false, 3000)"
+                     x-transition:enter="transition ease-out duration-300"
+                     x-transition:enter-start="opacity-0 translate-x-2"
+                     x-transition:enter-end="opacity-100 translate-x-0"
+                     x-transition:leave="transition ease-in duration-300"
+                     x-transition:leave-start="opacity-100 translate-x-0"
+                     x-transition:leave-end="opacity-0 translate-x-2"
+                     class="alert {% if message.tags == 'error' %}alert-error{% elif message.tags == 'success' %}alert-success{% elif message.tags == 'warning' %}alert-warning{% else %}alert-info{% endif %} shadow-lg grid-cols-[auto_1fr_auto]">
+                    
+                    {% if message.tags == 'error' %}
+                        <i data-lucide="alert-circle" class="w-6 h-6"></i>
+                    {% elif message.tags == 'success' %}
+                        <i data-lucide="check-circle" class="w-6 h-6"></i>
+                    {% elif message.tags == 'warning' %}
+                        <i data-lucide="alert-triangle" class="w-6 h-6"></i>
+                    {% else %}
+                        <i data-lucide="info" class="w-6 h-6"></i>
+                    {% endif %}
+
+                    <span>{{ message }}</span>
+                    
+                    <button @click="show = false" class="btn btn-sm btn-ghost btn-circle">
+                        <i data-lucide="x" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+    
+    <!-- Sidebar -->
+    <div class="drawer-side is-drawer-close:overflow-visible z-20">
+        <label for="drawer-toggle" aria-label="close sidebar" class="drawer-overlay"></label>
+            <!-- Sidebar Content -->
+            <div class="flex flex-col h-full bg-base-100 is-drawer-close:w-20 is-drawer-open:w-80 border-r border-base-300 transition-all duration-200">
+                <!-- Organization Switcher -->
+                <div class="p-2 border-b border-base-300">
+                    <div class="dropdown w-full is-drawer-close:dropdown-right is-drawer-close:dropdown-bottom">
+                        <div tabindex="0" role="button" class="btn btn-ghost btn-block justify-between px-2 font-normal h-auto py-2">
+                            <div class="flex items-center gap-3 overflow-hidden text-left">
+                                <div class="avatar placeholder">
+                                    <div class="bg-neutral text-neutral-content rounded-lg w-10">
+                                        <span class="text-lg">
+                                            {% if request.tenant %}
+                                                {{ request.tenant.name|slice:":1"|upper }}
+                                            {% else %}
+                                                <i data-lucide="building-2" class="w-5 h-5"></i>
+                                            {% endif %}
+                                        </span>
+                                    </div>
+                                </div>
+                                <div class="flex-1 truncate is-drawer-close:hidden">
+                                    <span class="block truncate font-bold text-sm">
+                                        {% if request.tenant %}
+                                            {{ request.tenant.name }}
+                                        {% else %}
+                                            {% trans "Select Org" %}
+                                        {% endif %}
+                                    </span>
+                                    <span class="block text-xs text-base-content/60">{% trans "Free Plan" %}</span>
+                                </div>
+                            </div>
+                            <i data-lucide="chevrons-up-down" class="w-4 h-4 text-base-content/50 is-drawer-close:hidden"></i>
+                        </div>
+
+                        <div tabindex="0" class="dropdown-content z-[2] menu p-2 shadow-lg bg-base-100 rounded-box w-64 mt-2 border border-base-200 origin-top-left">
+                            <div class="px-2 py-2 mb-2 border-b border-base-200 flex justify-between items-center">
+                                <span class="text-xs font-semibold text-base-content/50">{% trans "Organizations" %}</span>
+                            </div>
+                            
+                            <div class="max-h-64 overflow-y-auto custom-scrollbar">
+                                {% for membership in request.user.tenant_memberships.all %}
+                                <a href="#" onclick="switchTenant('{{ membership.tenant.id }}'); return false;" class="flex items-center gap-3 p-2 rounded-lg hover:bg-base-200 group {% if request.tenant.id == membership.tenant.id %}bg-base-200{% endif %}">
+                                    <div class="avatar placeholder">
+                                        <div class="bg-neutral text-neutral-content rounded w-8">
+                                            <span class="text-xs">{{ membership.tenant.name|slice:":1"|upper }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1 truncate">
+                                        <div class="font-medium text-sm flex items-center justify-between">
+                                            <span class="truncate">{{ membership.tenant.name }}</span>
+                                            {% if request.tenant.id == membership.tenant.id %}
+                                            <i data-lucide="check" class="w-4 h-4 text-primary"></i>
+                                            {% endif %}
+                                        </div>
+                                        <div class="text-xs text-base-content/60">{{ membership.role|title }}</div>
+                                    </div>
+                                </a>
+                                {% endfor %}
+                            </div>
+
+                            <div class="divider my-1"></div>
+                            
+                            <ul class="menu menu-sm gap-1">
+                                <li>
+                                    <a href="{% url 'multitenancy:list' %}">
+                                        <i data-lucide="settings-2" class="w-4 h-4"></i>
+                                        {% trans "Manage Organizations" %}
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{% url 'multitenancy:create' %}">
+                                        <i data-lucide="plus" class="w-4 h-4"></i>
+                                        {% trans "Create Organization" %}
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Navigation -->
+                {% load core_tags %}
+                <ul class="menu p-2 w-full flex-1 overflow-y-auto text-base-content gap-2">
+                    <!-- Dashboard -->
+                    <li>
+                        <a href="{% url 'core:dashboard' %}" class="grid grid-cols-[1.5rem_1fr] gap-3 {% is_active url_name='dashboard' %} is-drawer-close:tooltip is-drawer-close:tooltip-right" data-tip="Dashboard">
+                            <i data-lucide="layout-dashboard" class="w-6 h-6"></i>
+                            <span class="is-drawer-close:hidden font-medium">{% trans "Dashboard" %}</span>
+                        </a>
+                    </li>
+                    
+                    <!-- Business Group -->
+                    {% is_active part_match='product' as active_products %}
+                    {% is_active part_match='finance' as active_finances %}
+                    <li>
+                        <details {% if active_products or active_finances %}open{% endif %}>
+                            <summary class="group grid grid-cols-[1.5rem_1fr] gap-3">
+                                <i data-lucide="briefcase" class="w-6 h-6 group-open:text-primary"></i>
+                                <span class="is-drawer-close:hidden font-semibold group-open:text-primary">{% trans "Business" %}</span>
+                            </summary>
+                            <ul>
+                                <li>
+                                    <a href="{% url 'content:products_list' %}" class="{% if active_products %}menu-active{% endif %} is-drawer-close:tooltip is-drawer-close:tooltip-right" data-tip="{% trans 'Products' %}">
+                                        <span class="is-drawer-close:hidden">{% trans "Products" %}</span>
+                                        <span class="hidden is-drawer-close:inline">{% trans "Products" %}</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{% url 'finances:index' %}" class="{% if active_finances %}menu-active{% endif %} is-drawer-close:tooltip is-drawer-close:tooltip-right" data-tip="{% trans 'Finances' %}">
+                                        <span class="is-drawer-close:hidden">{% trans "Finances" %}</span>
+                                        <span class="hidden is-drawer-close:inline">{% trans "Finances" %}</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </details>
+                    </li>
+
+                    <!-- Tools Group -->
+                    {% is_active part_match='notification' as active_notif %}
+                    {% is_active part_match='document' as active_docs %}
+                    {% is_active url_name='ai_ideas' as active_ai %}
+                    <li>
+                        <details {% if active_notif or active_docs or active_ai %}open{% endif %}>
+                            <summary class="group grid grid-cols-[1.5rem_1fr] gap-3">
+                                <i data-lucide="wrench" class="w-6 h-6 group-open:text-primary"></i>
+                                <span class="is-drawer-close:hidden font-semibold group-open:text-primary">{% trans "Tools" %}</span>
+                            </summary>
+                            <ul>
+                                <li>
+                                    <a href="{% url 'notifications:list' %}" class="{% if active_notif %}menu-active{% endif %} is-drawer-close:tooltip is-drawer-close:tooltip-right" data-tip="{% trans 'Notifications' %}">
+                                        <span class="is-drawer-close:hidden">{% trans "Notifications" %}</span>
+                                        <span class="hidden is-drawer-close:inline">{% trans "Notifications" %}</span>
+                                        {% if unread_count %}
+                                        <span class="badge badge-primary badge-sm ml-auto is-drawer-close:hidden">{{ unread_count }}</span>
+                                        {% endif %}
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{% url 'content:documents_list' %}" class="{% if active_docs %}menu-active{% endif %} is-drawer-close:tooltip is-drawer-close:tooltip-right" data-tip="{% trans 'Documents' %}">
+                                        <span class="is-drawer-close:hidden">{% trans "Documents" %}</span>
+                                        <span class="hidden is-drawer-close:inline">{% trans "Documents" %}</span>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="{% url 'integrations:ai_ideas' %}" class="{% if active_ai %}menu-active{% endif %} is-drawer-close:tooltip is-drawer-close:tooltip-right" data-tip="{% trans 'AI Ideas' %}">
+                                        <span class="is-drawer-close:hidden">{% trans "AI Ideas" %}</span>
+                                        <span class="hidden is-drawer-close:inline">{% trans "AI Ideas" %}</span>
+                                    </a>
+                                </li>
+                            </ul>
+                        </details>
+                    </li>
+    
+                    <!-- Settings -->
+                    <li>
+                        <a href="{% url 'iam:settings' %}" class="grid grid-cols-[1.5rem_1fr] gap-3 {% is_active part_match='settings' %} is-drawer-close:tooltip is-drawer-close:tooltip-right" data-tip="{% trans 'Settings' %}">
+                            <i data-lucide="settings" class="w-6 h-6"></i>
+                            <span class="is-drawer-close:hidden font-medium">{% trans "Settings" %}</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Language Switcher -->
+                <div class="p-4 border-t border-base-300 bg-base-100 is-drawer-close:hidden">
+                    <form action="{% url 'set_language' %}" method="post">
+                        {% csrf_token %}
+                        <input name="next" type="hidden" value="{{ request.get_full_path }}">
+                        <div class="join w-full">
+                            <select name="language" class="select select-bordered select-sm w-full join-item">
+                                {% get_current_language as LANGUAGE_CODE %}
+                                {% get_available_languages as LANGUAGES %}
+                                {% get_language_info_list for LANGUAGES as languages %}
+                                {% for language in languages %}
+                                    <option value="{{ language.code }}"{% if language.code == LANGUAGE_CODE %} selected{% endif %}>
+                                        {{ language.name_local }} ({{ language.code }})
+                                    </option>
+                                {% endfor %}
+                            </select>
+                            <button class="btn btn-sm btn-primary join-item">Go</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Sidebar Persistence
+        const drawerToggle = document.getElementById('drawer-toggle');
+        if (drawerToggle) {
+            // Restore state
+            const savedState = localStorage.getItem('sidebar_expanded');
+            
+            // If saved state exists, apply it
+            if (savedState !== null) {
+                const isExpanded = savedState === 'true';
+                drawerToggle.checked = isExpanded;
+                
+                // Trigger change event to ensure any listeners update UI
+                // Using a small timeout to allow Alpine or other libs to init if needed
+                setTimeout(() => {
+                   drawerToggle.dispatchEvent(new Event('change')); 
+                }, 0);
+            }
+
+            // Save state on change
+            drawerToggle.addEventListener('change', function() {
+                localStorage.setItem('sidebar_expanded', drawerToggle.checked);
+            });
+        }
+    });
+
+    // Tenant Switcher Logic
+    function switchTenant(tenantId) {
+        fetch(`/api/tenants/${tenantId}/switch/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => {
+            if (response.ok) {
+                // Reload on success to refresh data
+                window.location.reload();
+            } else {
+                console.error('Failed to switch tenant');
+            }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+</script>
+{% endblock %}
