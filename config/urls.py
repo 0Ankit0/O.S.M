@@ -23,6 +23,12 @@ from django.views.generic.base import RedirectView
 urlpatterns = [
     # App URLs
     path("", include("core.urls")),
+    path("account/", include("accounts.urls")),
+    path("catalog/", include("catalog.urls")),
+    path("orders/", include("orders.urls")),
+    path("dashboard/payments/", include("payments.urls")),
+    path("dashboard/delivery/", include("delivery.urls")),
+    path("dashboard/reporting/", include("reporting.urls")),
     path("", include("iam.urls")),
     path("", include("multitenancy.urls")),
     path("", include("finances.urls")),
