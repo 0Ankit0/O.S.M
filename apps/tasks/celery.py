@@ -29,6 +29,10 @@ app.conf.beat_schedule = {
         "task": "tasks.scheduler.cleanup_expired_tokens",
         "schedule": crontab(hour=0, minute=0),
     },
+    "reconcile-pending-payments": {
+        "task": "tasks.payment_tasks.reconcile_pending_payments",
+        "schedule": crontab(minute="*/10"),
+    },
 }
 
 app.conf.timezone = "UTC"

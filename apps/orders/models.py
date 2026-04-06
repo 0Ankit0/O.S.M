@@ -58,7 +58,7 @@ class Order(models.Model):
     payment_gateway = models.CharField(max_length=20, blank=True)
     payment_status = models.CharField(max_length=20, choices=PaymentStatus.choices, default=PaymentStatus.UNPAID)
     payment_transaction = models.ForeignKey(
-        "finances.PaymentTransaction",
+        "payments.PaymentTransaction",
         on_delete=models.SET_NULL,
         related_name="orders",
         null=True,

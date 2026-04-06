@@ -1,0 +1,17 @@
+{% extends 'base_admin.html' %}
+
+{% block title %}Create Payment Session{% endblock %}
+{% block page_title %}Create Stripe Payment Session{% endblock %}
+
+{% block content %}
+<div class="card bg-base-100 border border-base-300 shadow-sm max-w-2xl">
+  <div class="card-body">
+    <p class="text-sm opacity-80">Use this form to start an online Stripe payment for an existing order. For Cash on Delivery, place orders from checkout using COD.</p>
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button class="btn btn-primary" type="submit">Create Stripe session</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

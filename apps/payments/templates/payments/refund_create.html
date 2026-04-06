@@ -1,0 +1,18 @@
+{% extends 'base_admin.html' %}
+
+{% block title %}Refund Payment #{{ transaction.id }}{% endblock %}
+{% block page_title %}Refund Payment #{{ transaction.id }}{% endblock %}
+
+{% block content %}
+<div class="card bg-base-100 border border-base-300 shadow-sm max-w-2xl">
+  <div class="card-body">
+    <p><strong>Order:</strong> {{ transaction.order_id }}</p>
+    <p><strong>Amount paid:</strong> {{ transaction.amount }} {{ transaction.currency }}</p>
+    <form method="post" class="space-y-4">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <button class="btn btn-warning" type="submit">Submit refund request</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

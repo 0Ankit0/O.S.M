@@ -10,6 +10,14 @@ class CartUpdateForm(forms.Form):
 
 class CheckoutForm(forms.Form):
     idempotency_key = forms.CharField(required=False, max_length=128)
+    payment_method = forms.ChoiceField(
+        required=False,
+        choices=[
+            ("cod", "Cash on Delivery"),
+            ("stripe", "Pay Online (Stripe)"),
+        ],
+        initial="cod",
+    )
     gateway = forms.ChoiceField(required=False)
     return_url = forms.URLField(required=False)
     website_url = forms.URLField(required=False)
@@ -19,3 +27,5 @@ class CheckoutForm(forms.Form):
         super().__init__(*args, **kwargs)
         gateways = PaymentIntegrationService.available_gateways()
         self.fields["gateway"].choices = [("", "No gateway (manual)")] + [(name, name.title()) for name in gateways]
+        if "stripe" not in gateways:
+            self.fields["payment_method"].choices = [("cod", "Cash on Delivery")]

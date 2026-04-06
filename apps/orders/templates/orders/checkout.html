@@ -4,12 +4,44 @@
 {% block page_title %}Checkout{% endblock %}
 
 {% block content %}
-<h2>Checkout</h2>
-<p>Subtotal: {{ cart.subtotal }}</p>
-<p>Use gateway = <code>stripe</code> or <code>khalti</code> to initiate online payment.</p>
-<form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Submit order</button>
-</form>
+<div class="space-y-6">
+  <div class="card bg-base-100 border border-base-300 shadow-sm">
+    <div class="card-body">
+      <h2 class="card-title">Order Summary</h2>
+      <p><strong>Subtotal:</strong> {{ cart.subtotal }}</p>
+      <p class="text-sm opacity-80">Choose Stripe for online payment or Cash on Delivery to pay on fulfillment.</p>
+    </div>
+  </div>
+
+  <div class="card bg-base-100 border border-base-300 shadow-sm">
+    <div class="card-body">
+      <h3 class="font-semibold mb-2">Payment Method</h3>
+      <form method="post" class="space-y-4">
+        {% csrf_token %}
+        <div class="form-control">
+          {% for value, label in form.payment_method.field.choices %}
+            <label class="label cursor-pointer justify-start gap-3">
+              <input type="radio" name="payment_method" value="{{ value }}" class="radio radio-primary"
+                     {% if form.payment_method.value == value or (not form.payment_method.value and value == form.payment_method.field.initial) %}checked{% endif %}>
+              <span>{{ label }}</span>
+            </label>
+          {% endfor %}
+        </div>
+
+        <div class="grid gap-3 md:grid-cols-2">
+          <label class="form-control w-full">
+            <span class="label-text">Idempotency Key (optional)</span>
+            {{ form.idempotency_key }}
+          </label>
+          <label class="form-control w-full">
+            <span class="label-text">Return URL (optional)</span>
+            {{ form.return_url }}
+          </label>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Place order</button>
+      </form>
+    </div>
+  </div>
+</div>
 {% endblock %}

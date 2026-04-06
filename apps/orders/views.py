@@ -53,12 +53,14 @@ class CheckoutView(LoginRequiredMixin, TemplateView):
             return self.get(request, *args, **kwargs)
 
         try:
+            selected_payment_method = form.cleaned_data.get("payment_method") or "cod"
+            gateway = "stripe" if selected_payment_method == "stripe" else None
             order, _, meta = CheckoutService.checkout(
                 user=request.user,
                 tenant=getattr(request, "tenant", None),
                 idempotency_key=form.cleaned_data.get("idempotency_key") or None,
-                gateway=form.cleaned_data.get("gateway") or None,
-                return_url=form.cleaned_data.get("return_url") or None,
+                gateway=gateway or form.cleaned_data.get("gateway") or None,
+                return_url=form.cleaned_data.get("return_url") or request.build_absolute_uri(reverse("orders:history")),
                 website_url=form.cleaned_data.get("website_url") or None,
                 payment_method_id=form.cleaned_data.get("payment_method_id") or None,
             )
@@ -70,7 +72,10 @@ class CheckoutView(LoginRequiredMixin, TemplateView):
         if payment and payment.get("payment_url"):
             return HttpResponseRedirect(payment["payment_url"])
 
-        messages.success(request, "Order placed successfully.")
+        if selected_payment_method == "cod":
+            messages.success(request, "Order placed successfully with Cash on Delivery.")
+        else:
+            messages.success(request, "Order placed successfully.")
         return HttpResponseRedirect(reverse("orders:detail", kwargs={"pk": order.pk}))
 
 

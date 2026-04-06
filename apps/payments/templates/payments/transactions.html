@@ -1,0 +1,39 @@
+{% extends 'base_admin.html' %}
+
+{% block title %}Payment Transactions{% endblock %}
+{% block page_title %}Payment Transactions{% endblock %}
+
+{% block content %}
+<div class="card bg-base-100 border border-base-300 shadow-sm">
+  <div class="card-body p-0">
+    <table class="table table-zebra w-full">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Order</th>
+          <th>Provider</th>
+          <th>Status</th>
+          <th>Amount</th>
+          <th>Updated</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for tx in transactions %}
+          <tr>
+            <td>#{{ tx.id }}</td>
+            <td>{{ tx.order_id }}</td>
+            <td>{{ tx.provider|upper }}</td>
+            <td>{{ tx.get_status_display }}</td>
+            <td>{{ tx.amount }} {{ tx.currency }}</td>
+            <td>{{ tx.updated_at }}</td>
+            <td><a href="{% url 'payments:detail' tx.id %}" class="btn btn-xs">Open</a></td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="7" class="text-center py-6">No payment transactions yet.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

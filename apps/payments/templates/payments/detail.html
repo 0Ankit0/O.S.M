@@ -1,0 +1,37 @@
+{% extends 'base_admin.html' %}
+
+{% block title %}Payment #{{ transaction.id }}{% endblock %}
+{% block page_title %}Payment #{{ transaction.id }}{% endblock %}
+
+{% block content %}
+<div class="space-y-4">
+  <div class="card bg-base-100 border border-base-300 shadow-sm">
+    <div class="card-body">
+      <p><strong>Order:</strong> {{ transaction.order_id }}</p>
+      <p><strong>Provider:</strong> {{ transaction.provider|upper }}</p>
+      <p><strong>Status:</strong> {{ transaction.get_status_display }}</p>
+      <p><strong>Amount:</strong> {{ transaction.amount }} {{ transaction.currency }}</p>
+      <p><strong>Provider Transaction ID:</strong> {{ transaction.provider_transaction_id }}</p>
+      <div class="flex gap-2 mt-4">
+        <form method="post" action="{% url 'payments:refresh' transaction.id %}">
+          {% csrf_token %}
+          <button class="btn btn-outline" type="submit">Refresh status</button>
+        </form>
+        {% if transaction.status == 'completed' %}
+          <a href="{% url 'payments:refund' transaction.id %}" class="btn btn-warning">Request refund</a>
+        {% endif %}
+        {% if transaction.payment_url %}
+          <a class="btn btn-primary" href="{{ transaction.payment_url }}">Open payment URL</a>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <div class="card bg-base-100 border border-base-300 shadow-sm">
+    <div class="card-body">
+      <h3 class="font-semibold">Provider Response</h3>
+      <pre class="overflow-auto text-xs">{{ transaction.provider_response|pprint }}</pre>
+    </div>
+  </div>
+</div>
+{% endblock %}
