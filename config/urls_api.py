@@ -64,6 +64,9 @@ urlpatterns = [
 
                 # Delivery
                 path("delivery/", include("delivery.api.urls")),
+
+                # Reporting
+                path("reporting/", include("reporting.api.urls")),
             ]
         ),
     ),
