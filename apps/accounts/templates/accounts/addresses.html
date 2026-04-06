@@ -1,0 +1,14 @@
+{% extends 'base_user.html' %}
+{% load i18n %}
+
+{% block title %}{% trans 'My Addresses' %}{% endblock %}
+{% block page_title %}{% trans 'My Addresses' %}{% endblock %}
+
+{% block content %}
+<div class="card bg-base-100 border border-base-300 shadow-sm">
+  <div class="card-body">
+    <h2 class="card-title">{% trans 'Saved Addresses' %}</h2>
+    <p>{% trans 'Add and update delivery or billing addresses associated with your account.' %}</p>
+  </div>
+</div>
+{% endblock %}

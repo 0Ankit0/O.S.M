@@ -1,0 +1,14 @@
+{% extends 'base_user.html' %}
+{% load i18n %}
+
+{% block title %}{% trans 'Notification Preferences' %}{% endblock %}
+{% block page_title %}{% trans 'Notification Preferences' %}{% endblock %}
+
+{% block content %}
+<div class="card bg-base-100 border border-base-300 shadow-sm">
+  <div class="card-body">
+    <h2 class="card-title">{% trans 'Notifications' %}</h2>
+    <p>{% trans 'Choose which notifications you want to receive and where they should be delivered.' %}</p>
+  </div>
+</div>
+{% endblock %}
