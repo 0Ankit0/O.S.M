@@ -5,10 +5,29 @@
 {% block page_title %}{% trans 'Payments' %}{% endblock %}
 
 {% block content %}
-<div class="card bg-base-100 border border-base-300 shadow-sm">
-  <div class="card-body">
-    <h2 class="card-title">{% trans 'Payments module' %}</h2>
-    <p>{% trans 'This operations surface is scaffolded from the system design implementation playbook.' %}</p>
+<div class="space-y-4">
+  <div class="stats shadow border border-base-300 bg-base-100 w-full">
+    <div class="stat">
+      <div class="stat-title">Total Payments</div>
+      <div class="stat-value text-primary">{{ payments_count }}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-title">Pending</div>
+      <div class="stat-value">{{ pending_count }}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-title">Completed</div>
+      <div class="stat-value text-success">{{ completed_count }}</div>
+    </div>
+    <div class="stat">
+      <div class="stat-title">Refunded</div>
+      <div class="stat-value text-warning">{{ refunded_count }}</div>
+    </div>
+  </div>
+
+  <div class="flex gap-2">
+    <a href="{% url 'payments:create' %}" class="btn btn-primary">Create Stripe Session</a>
+    <a href="{% url 'payments:transactions' %}" class="btn btn-outline">View Transactions</a>
   </div>
 </div>
 {% endblock %}
