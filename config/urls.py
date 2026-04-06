@@ -17,12 +17,10 @@ Including another URLconf
 from core import views as core_views
 from django.conf import settings
 from django.conf.urls.static import static
-from django.contrib import admin
 from django.urls import include, path
 from django.views.generic.base import RedirectView
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
     # App URLs
     path("", include("core.urls")),
     path("account/", include("accounts.urls")),
@@ -37,6 +35,7 @@ urlpatterns = [
     path("", include("notifications.urls")),
     path("", include("content.urls")),
     path("", include("integrations.urls")),
+    path("catalog/", include("catalog.urls")),
     # API URLs
     path("", include("config.urls_api")),
     # i18n

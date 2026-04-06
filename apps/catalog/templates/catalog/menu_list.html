@@ -1,0 +1,70 @@
+{% extends "base/dashboard_base.html" %}
+
+{% block title %}Catalog Menu{% endblock %}
+{% block page_title %}Catalog{% endblock %}
+
+{% block content %}
+<section class="space-y-8">
+  <header class="space-y-2">
+    <h1 class="text-3xl font-bold">Our Menu</h1>
+    <p class="text-base-content/70">Browse all categories and discover featured selections.</p>
+  </header>
+
+  <div class="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3">
+    {% for category in categories %}
+      <a href="{% url 'catalog:category-products' category.slug %}" class="btn btn-outline justify-start">
+        {{ category.name }}
+      </a>
+    {% empty %}
+      <div class="col-span-full alert"><span>No active categories available.</span></div>
+    {% endfor %}
+  </div>
+
+  {% if featured_products %}
+    <div class="space-y-3">
+      <h2 class="text-xl font-semibold">Featured</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        {% for product in featured_products %}
+          <article class="card bg-base-100 border border-base-200 shadow-sm">
+            <div class="card-body">
+              <div class="flex items-center justify-between">
+                <h3 class="card-title">{{ product.name }}</h3>
+                <span class="badge badge-accent">Featured</span>
+              </div>
+              <p class="text-sm text-base-content/70">{{ product.description|default:"No description available."|truncatechars:100 }}</p>
+              <div class="card-actions justify-between items-center">
+                <span class="font-semibold text-primary">${{ product.price }}</span>
+                <a href="{% url 'catalog:product-detail' product.slug %}" class="btn btn-primary btn-sm">Details</a>
+              </div>
+            </div>
+          </article>
+        {% endfor %}
+      </div>
+    </div>
+  {% endif %}
+
+  <div class="space-y-3">
+    <h2 class="text-xl font-semibold">All Products</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+      {% for product in products %}
+        <article class="card bg-base-100 border border-base-200 shadow-sm">
+          {% if product.image %}
+            <figure class="h-44 overflow-hidden"><img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-full h-full object-cover"></figure>
+          {% endif %}
+          <div class="card-body">
+            <p class="text-xs uppercase tracking-wide text-base-content/60">{{ product.category.name }}</p>
+            <h3 class="card-title">{{ product.name }}</h3>
+            <p class="text-sm text-base-content/70">{{ product.description|default:"No description available."|truncatechars:120 }}</p>
+            <div class="card-actions justify-between items-center mt-2">
+              <span class="font-semibold text-primary">${{ product.price }}</span>
+              <a href="{% url 'catalog:product-detail' product.slug %}" class="btn btn-sm btn-outline">View</a>
+            </div>
+          </div>
+        </article>
+      {% empty %}
+        <div class="col-span-full alert"><span>No active products available.</span></div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endblock %}
