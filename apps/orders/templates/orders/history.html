@@ -1,0 +1,18 @@
+{% extends 'base_user.html' %}
+
+{% block title %}Order History{% endblock %}
+{% block page_title %}Order History{% endblock %}
+
+{% block content %}
+<h2>Your Orders</h2>
+<ul>
+  {% for order in orders %}
+  <li>
+    <a href="{% url 'orders:detail' order.pk %}">Order #{{ order.pk }}</a>
+    - {{ order.status }} - payment: {{ order.payment_status }} ({{ order.payment_gateway|default:"manual" }}) - {{ order.subtotal }}
+  </li>
+  {% empty %}
+  <li>No orders found.</li>
+  {% endfor %}
+</ul>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends 'base_user.html' %}
+
+{% block title %}Order Detail{% endblock %}
+{% block page_title %}Order Detail{% endblock %}
+
+{% block content %}
+<h2>Order #{{ order.pk }}</h2>
+<p>Status: {{ order.status }}</p>
+<p>Payment: {{ order.payment_status }}{% if order.payment_gateway %} via {{ order.payment_gateway }}{% endif %}</p>
+<p>Subtotal: {{ order.subtotal }}</p>
+
+<h3>Items</h3>
+<ul>
+  {% for item in order.items.all %}
+  <li>{{ item.product.name }} x {{ item.quantity }} @ {{ item.unit_price }}</li>
+  {% endfor %}
+</ul>
+
+<h3>Status Timeline</h3>
+<ul>
+  {% for event in order.status_events.all %}
+  <li>{{ event.created_at }}: {{ event.from_status }} → {{ event.to_status }} {{ event.note }}</li>
+  {% endfor %}
+</ul>
+{% endblock %}

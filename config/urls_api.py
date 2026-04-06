@@ -55,6 +55,9 @@ urlpatterns = [
 
                 # Catalog
                 path("catalog/", include("catalog.api.urls")),
+
+                # Orders
+                path("orders/", include("orders.api.urls")),
             ]
         ),
     ),
