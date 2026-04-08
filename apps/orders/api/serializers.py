@@ -4,6 +4,7 @@ from orders.models import Cart, CartItem, Order, OrderItem, OrderStatusEvent
 
 
 class CartItemSerializer(serializers.ModelSerializer):
+    product = serializers.CharField(source="product_id", read_only=True)
     product_name = serializers.CharField(source="product.name", read_only=True)
     unit_price = serializers.DecimalField(source="product.price", max_digits=10, decimal_places=2, read_only=True)
     line_total = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
@@ -41,6 +42,7 @@ class CheckoutSerializer(serializers.Serializer):
 
 
 class OrderItemSerializer(serializers.ModelSerializer):
+    product = serializers.CharField(source="product_id", read_only=True)
     product_name = serializers.CharField(source="product.name", read_only=True)
 
     class Meta:

@@ -1,15 +1,19 @@
 from rest_framework import serializers
+from hashid_field import rest as hidrest
 
 from .models import Category, Product
 
 
 class CategorySerializer(serializers.ModelSerializer):
+    id = hidrest.HashidSerializerCharField(source_field="catalog.Category.id", read_only=True)
+
     class Meta:
         model = Category
         fields = ["id", "name", "slug"]
 
 
 class ProductListSerializer(serializers.ModelSerializer):
+    id = hidrest.HashidSerializerCharField(source_field="catalog.Product.id", read_only=True)
     category = CategorySerializer(read_only=True)
 
     class Meta:
@@ -18,6 +22,7 @@ class ProductListSerializer(serializers.ModelSerializer):
 
 
 class ProductDetailSerializer(serializers.ModelSerializer):
+    id = hidrest.HashidSerializerCharField(source_field="catalog.Product.id", read_only=True)
     category = CategorySerializer(read_only=True)
     is_available = serializers.SerializerMethodField()
     image_url = serializers.SerializerMethodField()

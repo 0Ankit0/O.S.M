@@ -22,20 +22,19 @@ from django.views.generic.base import RedirectView
 
 urlpatterns = [
     # App URLs
-    path("", include("core.urls")),
-    path("account/", include("accounts.urls")),
-    path("catalog/", include("catalog.urls")),
-    path("orders/", include("orders.urls")),
-    path("dashboard/payments/", include("payments.urls")),
-    path("dashboard/delivery/", include("delivery.urls")),
-    path("dashboard/reporting/", include("reporting.urls")),
-    path("", include("iam.urls")),
-    path("", include("multitenancy.urls")),
-    path("", include("finances.urls")),
-    path("", include("notifications.urls")),
-    path("", include("content.urls")),
-    path("", include("integrations.urls")),
-    path("catalog/", include("catalog.urls")),
+    path("", include(("core.urls", "core"), namespace="core")),
+    path("account/", include(("accounts.urls", "accounts"), namespace="accounts")),
+    path("catalog/", include(("catalog.urls", "catalog"), namespace="catalog")),
+    path("orders/", include(("orders.urls", "orders"), namespace="orders")),
+    path("dashboard/payments/", include(("payments.urls", "payments"), namespace="payments")),
+    path("dashboard/delivery/", include(("delivery.urls", "delivery"), namespace="delivery")),
+    path("dashboard/reporting/", include(("reporting.urls", "reporting"), namespace="reporting")),
+    path("", include(("iam.urls", "iam"), namespace="iam")),
+    path("", include(("multitenancy.urls", "multitenancy"), namespace="multitenancy")),
+    path("", include(("finances.urls", "finances"), namespace="finances")),
+    path("", include(("notifications.urls", "notifications"), namespace="notifications")),
+    path("", include(("content.urls", "content"), namespace="content")),
+    path("", include(("integrations.urls", "integrations"), namespace="integrations")),
     # API URLs
     path("", include("config.urls_api")),
     # i18n

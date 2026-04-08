@@ -1,4 +1,5 @@
 from django.conf import settings
+from hashid_field import rest as hidrest
 from rest_framework import serializers
 
 from . import models, tasks
@@ -13,6 +14,7 @@ class ContentfulWebhookSerializer(serializers.Serializer):
 
 class ContentItemSerializer(serializers.ModelSerializer):
     """Serializer for ContentItem model."""
+    id = hidrest.HashidSerializerCharField(source_field="content.ContentItem.id", read_only=True)
 
     class Meta:
         model = models.ContentItem
@@ -22,6 +24,7 @@ class ContentItemSerializer(serializers.ModelSerializer):
 
 class DocumentSerializer(serializers.ModelSerializer):
     """Serializer for Document model."""
+    id = hidrest.HashidSerializerCharField(source_field="content.Document.id", read_only=True)
 
     file_url = serializers.SerializerMethodField()
     thumbnail_url = serializers.SerializerMethodField()
@@ -92,6 +95,7 @@ class DocumentUploadSerializer(serializers.ModelSerializer):
 
 class PageSerializer(serializers.ModelSerializer):
     """Serializer for Page model."""
+    id = hidrest.HashidSerializerCharField(source_field="content.Page.id", read_only=True)
 
     class Meta:
         model = models.Page
@@ -111,6 +115,7 @@ class PageSerializer(serializers.ModelSerializer):
 
 class PageListSerializer(serializers.ModelSerializer):
     """Lightweight serializer for page listings."""
+    id = hidrest.HashidSerializerCharField(source_field="content.Page.id", read_only=True)
 
     class Meta:
         model = models.Page

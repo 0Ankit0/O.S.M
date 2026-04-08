@@ -14,31 +14,40 @@ from .forms import PlanCreationForm
 
 
 class PaymentIntentViewSet(viewsets.ModelViewSet):
+    swagger_schema = None
     serializer_class = serializers.PaymentIntentSerializer
     permission_classes = [IsAuthenticated]
     http_method_names = ["get", "post", "patch"]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False) or not getattr(self.request, "tenant", None):
+            return djstripe_models.PaymentIntent.objects.none()
         customer, _ = djstripe_models.Customer.get_or_create(self.request.tenant)
         return djstripe_models.PaymentIntent.objects.filter(customer=customer)
 
 
 class SetupIntentViewSet(viewsets.ModelViewSet):
+    swagger_schema = None
     serializer_class = serializers.SetupIntentSerializer
     permission_classes = [IsAuthenticated]
     http_method_names = ["get", "post"]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False) or not getattr(self.request, "tenant", None):
+            return djstripe_models.SetupIntent.objects.none()
         customer, _ = djstripe_models.Customer.get_or_create(self.request.tenant)
         return djstripe_models.SetupIntent.objects.filter(customer=customer)
 
 
 class PaymentMethodViewSet(viewsets.ModelViewSet):
+    swagger_schema = None
     serializer_class = serializers.PaymentMethodSerializer
     permission_classes = [IsAuthenticated]
     http_method_names = ["get", "delete"]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False) or not getattr(self.request, "tenant", None):
+            return djstripe_models.PaymentMethod.objects.none()
         customer, _ = djstripe_models.Customer.get_or_create(self.request.tenant)
         return djstripe_models.PaymentMethod.objects.filter(customer=customer)
 
@@ -54,20 +63,26 @@ class PaymentMethodViewSet(viewsets.ModelViewSet):
 
 
 class SubscriptionViewSet(viewsets.ReadOnlyModelViewSet):
+    swagger_schema = None
     serializer_class = serializers.SubscriptionSerializer
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False) or not getattr(self.request, "tenant", None):
+            return djstripe_models.Subscription.objects.none()
         customer, _ = djstripe_models.Customer.get_or_create(self.request.tenant)
         return djstripe_models.Subscription.objects.filter(customer=customer)
 
 
 class SubscriptionScheduleViewSet(viewsets.ModelViewSet):
+    swagger_schema = None
     serializer_class = serializers.TenantSubscriptionScheduleSerializer
     permission_classes = [IsAuthenticated]
     http_method_names = ["get", "patch"]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False) or not getattr(self.request, "tenant", None):
+            return djstripe_models.SubscriptionSchedule.objects.none()
         customer, _ = djstripe_models.Customer.get_or_create(self.request.tenant)
         return djstripe_models.SubscriptionSchedule.objects.filter(customer=customer)
 

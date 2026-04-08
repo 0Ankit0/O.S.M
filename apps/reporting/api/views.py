@@ -1,17 +1,23 @@
 from django.shortcuts import get_object_or_404
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
-from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from core.access import IsDashboardStaff
 from reporting.api.serializers import ExportJobRequestSerializer, ExportJobSerializer
 from reporting.models import ExportJob, ReportingJobStatus
 from reporting.tasks import generate_export_report
 
 
 class ExportJobCreateAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsDashboardStaff]
 
+    @swagger_auto_schema(
+        operation_summary="Create reporting export job",
+        request_body=ExportJobRequestSerializer,
+        responses={202: ExportJobSerializer},
+    )
     def post(self, request):
         serializer = ExportJobRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -21,8 +27,9 @@ class ExportJobCreateAPIView(APIView):
 
 
 class ExportJobStatusAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsDashboardStaff]
 
+    @swagger_auto_schema(operation_summary="Get export job status", responses={200: ExportJobSerializer})
     def get(self, request, job_id):
         queryset = ExportJob.objects.all()
         if not request.user.is_superuser:
@@ -33,8 +40,9 @@ class ExportJobStatusAPIView(APIView):
 
 
 class ExportJobDownloadAPIView(APIView):
-    permission_classes = [IsAuthenticated]
+    permission_classes = [IsDashboardStaff]
 
+    @swagger_auto_schema(operation_summary="Get export download details", responses={200: "Export artifact URL"})
     def get(self, request, job_id):
         queryset = ExportJob.objects.all()
         if not request.user.is_superuser:
