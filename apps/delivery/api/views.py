@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
@@ -13,6 +14,7 @@ from .serializers import AssignmentStatusUpdateSerializer, DeliveryTimelineSeria
 class ServiceabilityCheckAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(operation_summary="Check delivery serviceability", responses={200: ServiceabilitySerializer})
     def get(self, request):
         serializer = ServiceabilitySerializer(data=request.query_params)
         serializer.is_valid(raise_exception=True)
@@ -33,6 +35,11 @@ class ServiceabilityCheckAPIView(APIView):
 class AssignmentStatusUpdateAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        operation_summary="Update delivery assignment status",
+        request_body=AssignmentStatusUpdateSerializer,
+        responses={200: "Assignment status updated"},
+    )
     def patch(self, request, assignment_id):
         assignment = get_object_or_404(DeliveryAssignment, id=assignment_id)
         if not request.user.is_staff and assignment.assignee_id != request.user.id:
@@ -60,6 +67,7 @@ class AssignmentStatusUpdateAPIView(APIView):
 class OrderDeliveryTimelineAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(operation_summary="Get order delivery timeline", responses={200: DeliveryTimelineSerializer})
     def get(self, request, order_id):
         queryset = DeliveryAssignment.objects.filter(order_id=order_id).prefetch_related("events__actor").select_related(
             "assignee", "order"

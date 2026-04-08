@@ -182,6 +182,7 @@ class UserProfileViewSet(viewsets.ModelViewSet):
 
 class OTPGenerateView(generics.GenericAPIView):
     """Generate OTP for 2FA"""
+    serializer_class = iam_serializers.GenerateOTPSerializer
     permission_classes = [IsAuthenticated]
 
     def post(self, request):

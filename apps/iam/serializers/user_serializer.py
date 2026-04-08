@@ -384,6 +384,8 @@ class DisableOTPSerializer(serializers.Serializer):
 
 class CreateUserSerializer(serializers.ModelSerializer):
     """Serializer for creating a new user."""
+    id = rest.HashidSerializerCharField(source_field="iam.User.id", read_only=True)
+
     class Meta:
         model = get_user_model()
         fields = ('id', 'email', 'password')
@@ -402,6 +404,7 @@ class UpdateUserSerializer(serializers.ModelSerializer):
 
 class ListUserSerializer(serializers.ModelSerializer):
     """Serializer for listing iam."""
+    id = rest.HashidSerializerCharField(source_field="iam.User.id", read_only=True)
     profile = serializers.SerializerMethodField()
 
     class Meta:
@@ -410,4 +413,3 @@ class ListUserSerializer(serializers.ModelSerializer):
 
     def get_profile(self, obj):
         return {'avatar': obj.profile.avatar.url if obj.profile and obj.profile.avatar else None}
-

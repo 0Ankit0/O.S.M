@@ -2,7 +2,9 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from django.db.models import Q
 
+from .. import constants
 from .. import models, serializers
 from ..services import membership as membership_service
 
@@ -17,7 +19,12 @@ class TenantViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         tenant = serializer.save(created_by=self.request.user)
         models.TenantMembership.objects.create(
-            tenant=tenant, user=self.request.user, role=models.TenantUserRole.OWNER, invitee=self.request.user
+            tenant=tenant,
+            user=self.request.user,
+            role=constants.TenantUserRole.OWNER,
+            is_accepted=True,
+            invitee_email_address=self.request.user.email,
+            created_by=self.request.user,
         )
 
     @action(detail=True, methods=["post"])
@@ -26,8 +33,8 @@ class TenantViewSet(viewsets.ModelViewSet):
         # Ensure user is a member (get_queryset handles this largely, but explicit check doesn't hurt)
         if not models.TenantMembership.objects.filter(tenant=tenant, user=request.user).exists():
             return Response({"detail": "You are not a member of this tenant."}, status=status.HTTP_403_FORBIDDEN)
-        
-        request.session['tenant_id'] = str(tenant.id)
+
+        request.session["tenant_id"] = str(tenant.id)
         return Response({"detail": f"Switched to {tenant.name}", "tenant_id": str(tenant.id)})
 
 
@@ -36,12 +43,15 @@ class TenantMembershipViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        if getattr(self, "swagger_fake_view", False):
+            return models.TenantMembership.objects.none()
+
         tenant_id = self.request.query_params.get("tenant_id")
         if tenant_id:
-            return models.TenantMembership.objects.filter(
-                tenant_id=tenant_id, tenant__membership__user=self.request.user
+            return models.TenantMembership.objects.get_all().filter(
+                tenant_id=tenant_id, tenant__user_memberships__user=self.request.user
             )
-        return models.TenantMembership.objects.filter(tenant__membership__user=self.request.user)
+        return models.TenantMembership.objects.get_all().filter(tenant__user_memberships__user=self.request.user)
 
     @action(detail=True, methods=["delete"])
     def remove(self, request, pk=None):
@@ -53,11 +63,17 @@ class TenantMembershipViewSet(viewsets.ModelViewSet):
 class TenantInvitationViewSet(viewsets.ModelViewSet):
     serializer_class = serializers.TenantInvitationSerializer
     permission_classes = [IsAuthenticated]
+    http_method_names = ["get", "post", "delete"]
 
     def get_queryset(self):
-        return models.TenantInvitation.objects.filter(
-            invitee=self.request.user
-        ) | models.TenantInvitation.objects.filter(created_by=self.request.user)
+        if getattr(self, "swagger_fake_view", False):
+            return models.TenantMembership.objects.none()
+        return models.TenantMembership.objects.get_not_accepted().filter(
+            Q(user=self.request.user)
+            | Q(invitee_email_address=self.request.user.email)
+            | Q(created_by=self.request.user)
+            | Q(tenant__created_by=self.request.user)
+        )
 
     @action(detail=True, methods=["post"])
     def accept(self, request, pk=None):

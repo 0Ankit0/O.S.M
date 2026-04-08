@@ -62,4 +62,5 @@ class TenantMembership(BaseModel):
         ]
 
     def __str__(self):
-        return f"{self.user.email} {self.tenant.name} {self.role}"
+        user_label = self.user.email if self.user else self.invitee_email_address
+        return f"{user_label} {self.tenant.name} {self.role}"

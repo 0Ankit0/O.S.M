@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
 from django.core.exceptions import ValidationError
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -15,11 +16,18 @@ from .serializers import CreatePaymentSerializer, PaymentStatusSerializer, Refun
 class CreatePaymentIntentAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        operation_summary="Create payment intent",
+        request_body=CreatePaymentSerializer,
+        responses={201: PaymentStatusSerializer},
+    )
     def post(self, request):
         serializer = CreatePaymentSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
 
         order = get_object_or_404(Order, id=serializer.validated_data["order_id"], user=request.user)
+        if hasattr(order, "payment_record"):
+            return Response({"detail": "Payment already exists for this order."}, status=status.HTTP_409_CONFLICT)
         try:
             payment = create_payment_for_order(
                 order=order,
@@ -35,6 +43,7 @@ class CreatePaymentIntentAPIView(APIView):
 class PaymentStatusAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(operation_summary="Get payment status", responses={200: PaymentStatusSerializer})
     def get(self, request, payment_id):
         payment = get_object_or_404(PaymentTransaction, id=payment_id, order__user=request.user)
         refresh = request.query_params.get("refresh") == "true"
@@ -46,6 +55,11 @@ class PaymentStatusAPIView(APIView):
 class RefundCreateAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
+    @swagger_auto_schema(
+        operation_summary="Create refund request",
+        request_body=RefundCreateSerializer,
+        responses={201: RefundRequestSerializer},
+    )
     def post(self, request):
         serializer = RefundCreateSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -67,6 +81,7 @@ class PaymentWebhookReceiverAPIView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = []
 
+    @swagger_auto_schema(operation_summary="Receive provider webhook", responses={200: "Webhook accepted"})
     def post(self, request, provider):
         signature = request.headers.get("X-Payment-Signature", "")
         timestamp = request.headers.get("X-Payment-Timestamp", "0")

@@ -1,16 +1,11 @@
-from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.shortcuts import get_object_or_404
 from django.views.generic import DetailView, ListView
 
+from core.access import DashboardStaffRequiredMixin
 from delivery.models import DeliveryAssignment
 
 
-class StaffRequiredMixin(UserPassesTestMixin):
-    def test_func(self):
-        return self.request.user.is_staff
-
-
-class ActiveDeliveryListView(LoginRequiredMixin, StaffRequiredMixin, ListView):
+class ActiveDeliveryListView(DashboardStaffRequiredMixin, ListView):
     template_name = "delivery/active_deliveries.html"
     context_object_name = "assignments"
 
@@ -22,7 +17,7 @@ class ActiveDeliveryListView(LoginRequiredMixin, StaffRequiredMixin, ListView):
         )
 
 
-class DeliveryDetailView(LoginRequiredMixin, StaffRequiredMixin, DetailView):
+class DeliveryDetailView(DashboardStaffRequiredMixin, DetailView):
     template_name = "delivery/detail.html"
     context_object_name = "assignment"
     model = DeliveryAssignment

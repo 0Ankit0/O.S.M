@@ -35,41 +35,41 @@ urlpatterns = [
         "api/",
         include(
             [
-                # Authentication & User Management (single include to avoid namespace conflicts)
-                path("", include("iam.api.urls")),
+                # Authentication & User Management
+                path("iam/", include(("iam.api.urls", "iam_api"), namespace="iam_api")),
 
                 # Multi-tenancy
-                path("", include("multitenancy.api.urls")),
+                path("multitenancy/", include(("multitenancy.api.urls", "multitenancy_api"), namespace="multitenancy_api")),
 
                 # Notifications
-                path("", include("notifications.api.urls")),
+                path("notifications/", include(("notifications.api.urls", "notifications_api"), namespace="notifications_api")),
 
                 # Accounts
-                path("accounts/", include("accounts.api.urls")),
+                path("accounts/", include(("accounts.api.urls", "accounts_api"), namespace="accounts_api")),
 
                 # Finances & Subscriptions
-                path("finances/", include("finances.api.urls")),
+                path("finances/", include(("finances.api.urls", "finances_api"), namespace="finances_api")),
 
                 # Content Management (Contentful CMS)
-                path("content/", include("content.api.urls")),
+                path("content/", include(("content.api.urls", "content_api"), namespace="content_api")),
 
                 # Integrations (OpenAI)
-                path("integrations/", include("integrations.api.urls")),
+                path("integrations/", include(("integrations.api.urls", "integrations_api"), namespace="integrations_api")),
 
                 # Catalog
-                path("catalog/", include("catalog.api.urls")),
+                path("catalog/", include(("catalog.api.urls", "catalog_api"), namespace="catalog_api")),
 
                 # Orders
-                path("orders/", include("orders.api.urls")),
+                path("orders/", include(("orders.api.urls", "orders_api"), namespace="orders_api")),
 
                 # Payments
-                path("payments/", include("payments.api.urls")),
+                path("payments/", include(("payments.api.urls", "payments_api"), namespace="payments_api")),
 
                 # Delivery
-                path("delivery/", include("delivery.api.urls")),
+                path("delivery/", include(("delivery.api.urls", "delivery_api"), namespace="delivery_api")),
 
                 # Reporting
-                path("reporting/", include("reporting.api.urls")),
+                path("reporting/", include(("reporting.api.urls", "reporting_api"), namespace="reporting_api")),
             ]
         ),
     ),
