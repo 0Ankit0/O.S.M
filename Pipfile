@@ -46,6 +46,12 @@ ruff = "*"                                  # Fast Python linter and formatter
 mypy = "*"                                  # Static type checker for Python
 django-stubs = "*"                          # Type hints for Django
 pre-commit = "*"                            # Framework for managing pre-commit hooks
+pytest = "*"
+pytest-django = "*"
+pytest-mock = "*"
+factory-boy = "*"
+pytest-factoryboy = "*"
+calleee = "*"
 
 [requires]
 python_version = "3.14"

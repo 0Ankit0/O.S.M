@@ -1,0 +1,84 @@
+{% load i18n %}
+<div class="dropdown dropdown-end">
+    <button type="button" tabindex="0" class="btn btn-ghost btn-sm rounded-full border border-base-300/70 bg-base-100/80 shadow-sm backdrop-blur">
+        <i data-lucide="palette" class="w-4 h-4"></i>
+        <span class="hidden sm:inline">{% trans "Theme" %}</span>
+    </button>
+    <div tabindex="0" class="dropdown-content z-[80] mt-3 w-72 rounded-[1.5rem] border border-base-300/70 bg-base-100/95 p-4 shadow-2xl backdrop-blur">
+        <div class="mb-3">
+            <p class="text-sm font-semibold text-base-content">{% trans "Theme selection" %}</p>
+            <p class="text-xs text-base-content/60">{% trans "Apply one theme across admin and customer pages for this browser session." %}</p>
+        </div>
+
+        <label class="form-control mb-3">
+            <span class="label pb-2">
+                <span class="label-text text-xs uppercase tracking-[0.18em] text-base-content/45">{% trans "Quick switch" %}</span>
+            </span>
+            <select class="select select-bordered select-sm rounded-xl" data-theme-selector>
+                <option value="corporate">Corporate</option>
+                <option value="emerald">Emerald</option>
+                <option value="winter">Winter</option>
+                <option value="lofi">Lo-fi</option>
+                <option value="business">Business</option>
+            </select>
+        </label>
+
+        <div class="grid gap-2">
+            <button type="button" data-theme-choice="corporate" class="flex items-center justify-between rounded-2xl border border-base-300/70 px-3 py-3 text-left transition hover:border-primary hover:bg-base-200/70">
+                <span>
+                    <span class="block text-sm font-semibold">Corporate</span>
+                    <span class="block text-xs text-base-content/60">{% trans "Balanced neutral workspace" %}</span>
+                </span>
+                <span class="flex gap-1">
+                    <span class="h-3 w-3 rounded-full bg-slate-800"></span>
+                    <span class="h-3 w-3 rounded-full bg-sky-500"></span>
+                    <span class="h-3 w-3 rounded-full bg-white border border-base-300"></span>
+                </span>
+            </button>
+            <button type="button" data-theme-choice="emerald" class="flex items-center justify-between rounded-2xl border border-base-300/70 px-3 py-3 text-left transition hover:border-primary hover:bg-base-200/70">
+                <span>
+                    <span class="block text-sm font-semibold">Emerald</span>
+                    <span class="block text-xs text-base-content/60">{% trans "Fresh, bright commerce palette" %}</span>
+                </span>
+                <span class="flex gap-1">
+                    <span class="h-3 w-3 rounded-full bg-emerald-700"></span>
+                    <span class="h-3 w-3 rounded-full bg-emerald-400"></span>
+                    <span class="h-3 w-3 rounded-full bg-lime-100 border border-base-300"></span>
+                </span>
+            </button>
+            <button type="button" data-theme-choice="winter" class="flex items-center justify-between rounded-2xl border border-base-300/70 px-3 py-3 text-left transition hover:border-primary hover:bg-base-200/70">
+                <span>
+                    <span class="block text-sm font-semibold">Winter</span>
+                    <span class="block text-xs text-base-content/60">{% trans "Cool, crisp high-contrast surfaces" %}</span>
+                </span>
+                <span class="flex gap-1">
+                    <span class="h-3 w-3 rounded-full bg-sky-700"></span>
+                    <span class="h-3 w-3 rounded-full bg-cyan-300"></span>
+                    <span class="h-3 w-3 rounded-full bg-blue-50 border border-base-300"></span>
+                </span>
+            </button>
+            <button type="button" data-theme-choice="lofi" class="flex items-center justify-between rounded-2xl border border-base-300/70 px-3 py-3 text-left transition hover:border-primary hover:bg-base-200/70">
+                <span>
+                    <span class="block text-sm font-semibold">Lo-fi</span>
+                    <span class="block text-xs text-base-content/60">{% trans "Minimal grayscale for dense admin work" %}</span>
+                </span>
+                <span class="flex gap-1">
+                    <span class="h-3 w-3 rounded-full bg-zinc-900"></span>
+                    <span class="h-3 w-3 rounded-full bg-zinc-500"></span>
+                    <span class="h-3 w-3 rounded-full bg-zinc-100 border border-base-300"></span>
+                </span>
+            </button>
+            <button type="button" data-theme-choice="business" class="flex items-center justify-between rounded-2xl border border-base-300/70 px-3 py-3 text-left transition hover:border-primary hover:bg-base-200/70">
+                <span>
+                    <span class="block text-sm font-semibold">Business</span>
+                    <span class="block text-xs text-base-content/60">{% trans "Dark executive palette for operations review" %}</span>
+                </span>
+                <span class="flex gap-1">
+                    <span class="h-3 w-3 rounded-full bg-slate-900"></span>
+                    <span class="h-3 w-3 rounded-full bg-cyan-400"></span>
+                    <span class="h-3 w-3 rounded-full bg-slate-500 border border-base-300"></span>
+                </span>
+            </button>
+        </div>
+    </div>
+</div>

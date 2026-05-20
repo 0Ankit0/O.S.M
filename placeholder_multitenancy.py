@@ -1,10 +1,3 @@
-from django.shortcuts import render, redirect, get_object_or_404
-from django.views.generic import ListView, FormView, TemplateView
-from django.contrib.auth.mixins import LoginRequiredMixin
-from django.urls import reverse_lazy, reverse
-from django.contrib import messages
-from . import forms
-from . import models
 
 # ... existing code ... mainly API ViewSets ...
 # I will append the Template Views at the end of the file.

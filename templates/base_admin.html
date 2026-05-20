@@ -1,38 +1,62 @@
-{% load static tailwind_tags i18n %}
-<!DOCTYPE html>
-<html lang="en" class="h-full">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Restaurant OMS Admin">
-    <title>{% block title %}Admin · Restaurant OMS{% endblock %}</title>
-    {% tailwind_css %}
-    {% block extra_head %}{% endblock %}
-</head>
-<body class="h-full bg-base-200 text-base-content">
-<div class="min-h-screen grid grid-cols-1 lg:grid-cols-[280px_1fr]">
-    <aside class="bg-base-100 border-r border-base-300 p-4">
-        {% block sidebar %}
-            {% include 'partials/admin_sidebar.html' %}
-        {% endblock %}
-    </aside>
-    <div class="flex flex-col">
-        <header class="bg-base-100 border-b border-base-300 px-6 py-4 space-y-3">
-            {% block breadcrumbs %}
-                {% include 'partials/breadcrumbs.html' %}
-            {% endblock %}
-            <div class="flex items-center justify-between gap-4">
-                <h1 class="text-2xl font-bold">{% block page_title %}{% trans "Operations" %}{% endblock %}</h1>
-                <div>{% block primary_actions %}{% endblock %}</div>
+{% extends "base/base.html" %}
+{% load i18n %}
+
+{% block title %}{% block admin_title %}Admin · Restaurant OMS{% endblock %}{% endblock %}
+{% block body %}
+<div class="min-h-screen bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.14),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(16,185,129,0.1),transparent_24%)]">
+    <div class="mx-auto flex max-w-[1600px] flex-col gap-4 px-4 py-4 sm:px-6 lg:grid lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start">
+        <aside class="lg:sticky lg:top-4">
+            <div class="overflow-hidden rounded-[2rem] border border-base-300/70 bg-base-100/85 shadow-2xl backdrop-blur">
+                <div class="border-b border-base-300/70 bg-gradient-to-br from-primary/15 via-base-100 to-secondary/10 p-5">
+                    <div class="flex items-start justify-between gap-4">
+                        <div>
+                            <p class="text-xs font-semibold uppercase tracking-[0.24em] text-base-content/50">{% trans "Operations" %}</p>
+                            <h1 class="mt-2 text-2xl font-semibold text-base-content">Restaurant OMS</h1>
+                            <p class="mt-2 text-sm text-base-content/70">{% trans "Manage orders, payments, delivery, reporting, and storefront operations from one place." %}</p>
+                        </div>
+                        <span class="badge badge-primary badge-outline whitespace-nowrap">{% trans "Admin" %}</span>
+                    </div>
+                    <div class="mt-4 rounded-2xl border border-base-300/70 bg-base-100/80 p-3 shadow-sm">
+                        <p class="text-xs font-medium uppercase tracking-[0.2em] text-base-content/50">{% trans "Signed in as" %}</p>
+                        <p class="mt-1 text-sm font-semibold text-base-content">{{ request.user.get_full_name|default:request.user.email }}</p>
+                        <p class="text-xs text-base-content/60">{{ request.user.email }}</p>
+                    </div>
+                </div>
+                <div class="p-4">
+                    {% block sidebar %}
+                        {% include 'partials/admin_sidebar.html' %}
+                    {% endblock %}
+                </div>
             </div>
-        </header>
-        <main class="flex-1 p-6 space-y-4">
-            {% include 'partials/alerts.html' %}
-            {% block content %}{% endblock %}
-        </main>
+        </aside>
+
+        <div class="space-y-4">
+            <header class="rounded-[2rem] border border-base-300/70 bg-base-100/85 p-5 shadow-xl backdrop-blur">
+                <div class="flex flex-col gap-4">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <div class="min-w-0">
+                            {% block breadcrumbs %}
+                                {% include 'partials/breadcrumbs.html' %}
+                            {% endblock %}
+                            <h2 class="mt-3 text-3xl font-semibold tracking-tight text-base-content">{% block page_title %}{% trans "Operations" %}{% endblock %}</h2>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            {% include 'partials/theme_selector.html' %}
+                            {% block page_actions %}{% endblock %}
+                            {% block primary_actions %}{% endblock %}
+                            <a href="{% url 'iam:settings' %}" class="btn btn-ghost btn-sm rounded-full">{% trans "Settings" %}</a>
+                            <a href="{% url 'iam:logout' %}" class="btn btn-outline btn-sm rounded-full">{% trans "Logout" %}</a>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <main class="space-y-4">
+                {% include 'partials/alerts.html' %}
+                {% block content %}{% endblock %}
+            </main>
+        </div>
     </div>
 </div>
-<script src="{% static 'js/main.js' %}"></script>
 {% block admin_scripts %}{% endblock %}
-</body>
-</html>
+{% endblock %}

@@ -1,14 +1,56 @@
 {% load i18n %}
-<header class="navbar bg-base-100 border-b border-base-300 px-4">
-    <div class="flex-1">
-        <a href="{% url 'core:home' %}" class="btn btn-ghost text-xl">{% trans "Restaurant OMS" %}</a>
+<header class="sticky top-0 z-40 border-b border-base-300/70 bg-base-100/85 backdrop-blur">
+    <div class="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
+        <div class="flex items-center justify-between gap-4">
+            <a href="{% url 'core:home' %}" class="inline-flex items-center gap-3 rounded-full px-2 py-1 text-xl font-semibold tracking-tight">
+                <span class="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-primary-content shadow-lg">OMS</span>
+                <span>{% trans "Restaurant OMS" %}</span>
+            </a>
+            <div class="lg:hidden">
+                {% include 'partials/theme_selector.html' %}
+            </div>
+        </div>
+
+        <div class="flex flex-col gap-3 lg:flex-row lg:items-center">
+            <nav class="overflow-x-auto">
+                <ul class="menu menu-horizontal inline-flex min-w-max gap-1 rounded-full border border-base-300/70 bg-base-100/80 px-2 py-1 shadow-sm">
+                    <li><a class="rounded-full" href="{% url 'catalog:index' %}">{% trans "Menu" %}</a></li>
+                    <li>
+                        <a class="rounded-full" href="{% if request.user.is_authenticated %}{% url 'orders:history' %}{% else %}{% url 'orders:index' %}{% endif %}">
+                            {% trans "Orders" %}
+                        </a>
+                    </li>
+                    <li>
+                        <a class="rounded-full" href="{% if request.user.is_authenticated %}{% url 'payments:index' %}{% else %}{% url 'iam:login' %}{% endif %}">
+                            {% trans "Payments" %}
+                        </a>
+                    </li>
+                    <li>
+                        <a class="rounded-full" href="{% if request.user.is_authenticated %}{% url 'iam:settings' %}{% else %}{% url 'iam:login' %}{% endif %}">
+                            {% trans "Account" %}
+                        </a>
+                    </li>
+                    <li>
+                        <a class="rounded-full" href="{% if request.user.is_authenticated %}{% url 'core:dashboard' %}{% else %}{% url 'iam:login' %}{% endif %}">
+                            {% trans "Dashboard" %}
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <div class="hidden lg:block">
+                {% include 'partials/theme_selector.html' %}
+            </div>
+
+            <div class="flex items-center gap-2">
+                {% if request.user.is_authenticated %}
+                    <span class="badge badge-outline h-10 rounded-full px-4">{{ request.user.email }}</span>
+                    <a href="{% url 'iam:logout' %}" class="btn btn-outline btn-sm rounded-full">{% trans "Logout" %}</a>
+                {% else %}
+                    <a href="{% url 'iam:login' %}" class="btn btn-ghost btn-sm rounded-full">{% trans "Login" %}</a>
+                    <a href="{% url 'iam:signup' %}" class="btn btn-primary btn-sm rounded-full">{% trans "Sign up" %}</a>
+                {% endif %}
+            </div>
+        </div>
     </div>
-    <nav class="flex-none">
-        <ul class="menu menu-horizontal gap-1 px-1">
-            <li><a href="{% url 'catalog:index' %}">{% trans "Menu" %}</a></li>
-            <li><a href="{% url 'orders:index' %}">{% trans "Orders" %}</a></li>
-            <li><a href="{% url 'accounts:index' %}">{% trans "Account" %}</a></li>
-            <li><a href="{% url 'core:dashboard' %}">{% trans "Admin" %}</a></li>
-        </ul>
-    </nav>
 </header>

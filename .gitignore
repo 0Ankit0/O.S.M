@@ -7,3 +7,17 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+
+
+# Tests and coverage reports
+.pytest_cache/
+.coverage
+.ruff_cache
+htmlcov/
+
+# Virtual environment
+.venv/
+venv/
+
+# Media files
+media/
