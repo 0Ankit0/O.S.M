@@ -76,9 +76,8 @@ def process_uploaded_document(document_id: int):
 @shared_task
 def generate_sitemap():
     """Generate sitemap for SEO."""
-    from django.conf import settings
-
     from content.models import ContentItem
+    from django.conf import settings
 
     logger.info("Generating sitemap")
 
