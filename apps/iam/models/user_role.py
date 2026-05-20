@@ -1,8 +1,6 @@
-import uuid
-
-from django.db import models
 
 from core.models import BaseModel
+from django.db import models
 
 from .role import Role
 from .user import User

@@ -1,4 +1,4 @@
-{% extends "base/dashboard_base.html" %}
+{% extends base_template %}
 
 {% block title %}Security Settings - Django Template{% endblock %}
 {% block page_title %}Security Settings{% endblock %}
@@ -68,10 +68,13 @@
                 </div>
             </div>
             
-            <button class="btn btn-error btn-outline mt-4">
+            <form method="post" action="{% url 'iam:logout_other_sessions' %}" class="mt-4">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-error btn-outline">
                 <i data-lucide="log-out" class="w-4 h-4"></i>
                 Sign out all other sessions
-            </button>
+                </button>
+            </form>
         </div>
     </div>
 </div>

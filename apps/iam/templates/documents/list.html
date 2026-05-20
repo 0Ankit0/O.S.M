@@ -54,20 +54,20 @@
               hx-swap="afterbegin"
               class="space-y-4">
             {% csrf_token %}
-            
+
+            {% for field in upload_form %}
             <div class="form-control">
                 <label class="label">
-                    <span class="label-text">Select File</span>
+                    <span class="label-text">{{ field.label }}</span>
                 </label>
-                {{ upload_form.file }}
-            </div>
-            
-            <div class="form-control">
+                {{ field }}
+                {% if field.errors %}
                 <label class="label">
-                    <span class="label-text">Description (optional)</span>
+                    <span class="label-text-alt text-error">{{ field.errors.0 }}</span>
                 </label>
-                {{ upload_form.description }}
+                {% endif %}
             </div>
+            {% endfor %}
             
             <button type="submit" class="btn btn-primary btn-block">Upload</button>
         </form>

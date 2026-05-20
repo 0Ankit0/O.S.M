@@ -1,4 +1,4 @@
-{% extends "base/dashboard_base.html" %}
+{% extends base_template %}
 
 {% block title %}Settings - Django Template{% endblock %}
 {% block page_title %}Settings{% endblock %}
@@ -191,9 +191,9 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="font-semibold">Delete Account</p>
-                    <p class="text-sm text-base-content/60">Permanently delete your account and all data</p>
+                    <p class="text-sm text-base-content/60">Account deletion is not exposed in the local demo UI.</p>
                 </div>
-                <button class="btn btn-error btn-outline btn-sm">Delete Account</button>
+                <span class="badge badge-outline">Unavailable in demo</span>
             </div>
         </div>
     </div>

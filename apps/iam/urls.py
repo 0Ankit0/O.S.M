@@ -1,5 +1,6 @@
-from django.urls import include, path, re_path
-from . import web_views # Import web views
+from django.urls import path
+
+from . import web_views  # Import web views
 
 app_name = 'iam'
 
@@ -17,6 +18,7 @@ web_urlpatterns = [
     path('password/reset/complete/', web_views.CustomPasswordResetCompleteView.as_view(), name='password_reset_complete'),
     path('settings/', web_views.SettingsView.as_view(), name='settings'),
     path('settings/security/', web_views.SecuritySettingsView.as_view(), name='settings_security'),
+    path('settings/security/logout-other-sessions/', web_views.LogoutOtherSessionsView.as_view(), name='logout_other_sessions'),
 ]
 
 urlpatterns = web_urlpatterns

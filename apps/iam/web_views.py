@@ -1,15 +1,39 @@
 from django.contrib import messages
+from django.conf import settings
 from django.contrib.auth import get_user_model, login, logout
 from django.contrib.auth import views as auth_views
 from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.sessions.models import Session
 from django.shortcuts import get_object_or_404, redirect
+from django.utils import timezone
 from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import FormView, TemplateView
+from core.mixins import RoleAwareBaseTemplateMixin
 
 from . import forms
 
 User = get_user_model()
+
+
+def _social_login_context():
+    google_enabled = bool(
+        settings.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY
+        and settings.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET
+        and "<CHANGE_ME>" not in settings.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY
+        and "<CHANGE_ME>" not in settings.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET
+    )
+    facebook_enabled = bool(
+        settings.SOCIAL_AUTH_FACEBOOK_KEY
+        and settings.SOCIAL_AUTH_FACEBOOK_SECRET
+        and "<CHANGE_ME>" not in settings.SOCIAL_AUTH_FACEBOOK_KEY
+        and "<CHANGE_ME>" not in settings.SOCIAL_AUTH_FACEBOOK_SECRET
+    )
+    return {
+        "social_google_enabled": google_enabled,
+        "social_facebook_enabled": facebook_enabled,
+        "social_login_enabled": google_enabled or facebook_enabled,
+    }
 
 
 class LoginView(FormView):
@@ -23,6 +47,11 @@ class LoginView(FormView):
         if request.user.is_authenticated:
             return redirect("core:dashboard")
         return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(_social_login_context())
+        return context
 
     def form_valid(self, form):
         remember_me = form.cleaned_data.get("remember_me")
@@ -62,6 +91,11 @@ class SignupView(FormView):
         if request.user.is_authenticated:
             return redirect("core:dashboard")
         return super().dispatch(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context.update(_social_login_context())
+        return context
 
     def form_valid(self, form):
         user = form.save(commit=False)
@@ -217,7 +251,34 @@ class OTPDisableView(LoginRequiredMixin, View):
         return redirect("iam:settings_security")
 
 
-class SettingsView(LoginRequiredMixin, TemplateView):
+class LogoutOtherSessionsView(LoginRequiredMixin, View):
+    """Sign the current user out of all other active sessions."""
+
+    login_url = reverse_lazy("iam:login")
+
+    def post(self, request):
+        current_session_key = request.session.session_key
+        user_id = str(request.user.pk)
+        revoked_session_keys = []
+
+        active_sessions = Session.objects.filter(expire_date__gte=timezone.now())
+        if current_session_key:
+            active_sessions = active_sessions.exclude(session_key=current_session_key)
+
+        for session in active_sessions:
+            if session.get_decoded().get("_auth_user_id") == user_id:
+                revoked_session_keys.append(session.session_key)
+
+        if revoked_session_keys:
+            Session.objects.filter(session_key__in=revoked_session_keys).delete()
+            messages.info(request, f"Signed out {len(revoked_session_keys)} other session(s).")
+        else:
+            messages.info(request, "No other active sessions were found.")
+
+        return redirect("iam:settings_security")
+
+
+class SettingsView(LoginRequiredMixin, RoleAwareBaseTemplateMixin, TemplateView):
     """User settings view."""
 
     template_name = "settings/index.html"
@@ -267,7 +328,7 @@ class SettingsView(LoginRequiredMixin, TemplateView):
         return self.render_to_response(context)
 
 
-class SecuritySettingsView(LoginRequiredMixin, TemplateView):
+class SecuritySettingsView(LoginRequiredMixin, RoleAwareBaseTemplateMixin, TemplateView):
     """Security settings (2FA)."""
 
     template_name = "settings/security.html"

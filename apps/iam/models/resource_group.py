@@ -1,11 +1,11 @@
 """Resource Group Model - Module Definition with Permissions"""
 
-import uuid
 
-from .permissions import Permission
 from django.db import models
 
 from apps.core.models.base import BaseModel
+
+from .permissions import Permission
 
 # Using string reference for Icon to avoid circular import from apps.core.models
 

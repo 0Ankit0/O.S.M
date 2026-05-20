@@ -1,5 +1,6 @@
 import os
 import sys
+
 import django
 
 # Add the project root to the Python path
@@ -11,22 +12,29 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
 # Setup Django
 django.setup()
 
-from iam.models import Group, User
+
+def get_models():
+    from iam.models import Group, User
+
+    return Group, User
+
 
 def seed_groups():
     """Seed default groups."""
+    Group, _ = get_models()
     Group.objects.get_or_create(name='User')
     Group.objects.get_or_create(name='Admin')
     print("Default groups seeded successfully.")
 
 def seed_users():
     """Seed default users with roles."""
+    Group, User = get_models()
     # Ensure groups exist
     seed_groups()
-    
+
     admin_group = Group.objects.get(name='Admin')
     user_group = Group.objects.get(name='User')
-    
+
     # Seed admin user
     admin_user, created = User.objects.get_or_create(
         username='admin',
@@ -43,7 +51,7 @@ def seed_users():
         print("Admin user 'admin' created.")
     else:
         print("Admin user 'admin' already exists.")
-    
+
     # Seed regular user
     regular_user, created = User.objects.get_or_create(
         username='user',
@@ -59,6 +67,7 @@ def seed_users():
         print("Regular user 'user' created.")
     else:
         print("Regular user 'user' already exists.")
+
 
 if __name__ == '__main__':
     seed_users()

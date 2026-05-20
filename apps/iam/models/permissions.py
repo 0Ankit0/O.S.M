@@ -1,8 +1,6 @@
-from django.db import models
-from django.contrib.contenttypes.models import ContentType
-from django.utils.translation import gettext_lazy as _
-from core.models import BaseModel
 from django.contrib.auth.models import Permission as BasePermissionModel
+from django.utils.translation import gettext_lazy as _
+
 
 class Permission(BasePermissionModel):
     pass

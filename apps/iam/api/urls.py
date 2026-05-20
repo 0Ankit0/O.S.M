@@ -1,8 +1,10 @@
 from django.urls import include, path, re_path
 from rest_framework import routers
 from social_django import views as django_social_views
+
+from iam.api.views import GroupViewSet, UserViewSet
+
 from . import views
-from iam.api.views import UserViewSet, GroupViewSet
 
 app_name = 'iam_api'
 

@@ -1,7 +1,7 @@
+from django.contrib.auth import REDIRECT_FIELD_NAME, get_user_model
 from django.views.decorators.cache import never_cache
 from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth import REDIRECT_FIELD_NAME, get_user_model
-from rest_framework import generics, status, viewsets, permissions, serializers
+from rest_framework import generics, permissions, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -12,11 +12,17 @@ from social_core.actions import do_complete
 from social_django.utils import psa
 
 from config import settings
-from iam import models, serializers as iam_serializers, utils
+from iam import models, utils
+from iam import serializers as iam_serializers
 from iam.models import Group
+
 from ..serializers import (
-    CreateUserSerializer, UpdateUserSerializer, ListUserSerializer,
-    CreateGroupSerializer, UpdateGroupSerializer, ListGroupSerializer
+    CreateGroupSerializer,
+    CreateUserSerializer,
+    ListGroupSerializer,
+    ListUserSerializer,
+    UpdateGroupSerializer,
+    UpdateUserSerializer,
 )
 
 User = get_user_model()

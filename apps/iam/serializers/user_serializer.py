@@ -1,3 +1,4 @@
+from core.decorators import context_user_required
 from django.conf import settings
 from django.contrib import auth as dj_auth
 from django.contrib.auth import get_user_model, password_validation
@@ -11,8 +12,6 @@ from rest_framework_simplejwt import tokens as jwt_tokens
 from rest_framework_simplejwt.serializers import PasswordField
 from rest_framework_simplejwt.settings import api_settings as jwt_api_settings
 from rest_framework_simplejwt.tokens import RefreshToken
-
-from core.decorators import context_user_required
 
 from .. import jwt, models, notifications, tokens
 from ..services import otp as otp_services
@@ -390,7 +389,7 @@ class CreateUserSerializer(serializers.ModelSerializer):
         model = get_user_model()
         fields = ('id', 'email', 'password')
         extra_kwargs = {'password': {'write_only': True}}
-    
+
     def create(self, validated_data):
         return get_user_model().objects.create_user(**validated_data)
 

@@ -13,7 +13,7 @@ User = get_user_model()
 
 class LoginForm(TailwindFormMixin, AuthenticationForm):
     """Custom login form with Tailwind styling."""
-    
+
     username = forms.EmailField(
         label='Email',
         widget=forms.EmailInput(attrs={'placeholder': 'Enter your email', 'autofocus': True})
@@ -31,7 +31,7 @@ class LoginForm(TailwindFormMixin, AuthenticationForm):
 
 class SignupForm(TailwindFormMixin, UserCreationForm):
     """Custom signup form with Tailwind styling."""
-    
+
     email = forms.EmailField(
         label='Email',
         widget=forms.EmailInput(attrs={'placeholder': 'Enter your email'})
@@ -48,7 +48,7 @@ class SignupForm(TailwindFormMixin, UserCreationForm):
         label='Last Name',
         widget=forms.TextInput(attrs={'placeholder': 'Last name'})
     )
-    
+
     class Meta:
         model = User
         fields = ('email', 'first_name', 'last_name', 'password1', 'password2')
@@ -75,13 +75,13 @@ class ProfileForm(TailwindFormMixin, forms.ModelForm):
         required=True,
         widget=forms.EmailInput(attrs={'placeholder': 'Email address'})
     )
-    
+
     avatar = forms.FileField(
         required=False,
         widget=forms.FileInput(),
         label='Profile Picture'
     )
-    
+
     class Meta:
         from iam.models import User, UserProfile
 
@@ -91,7 +91,7 @@ class ProfileForm(TailwindFormMixin, forms.ModelForm):
             'first_name': forms.TextInput(attrs={'placeholder': 'First name'}),
             'last_name': forms.TextInput(attrs={'placeholder': 'Last name'}),
         }
-    
+
     def __init__(self, *args, **kwargs):
         self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
@@ -99,23 +99,23 @@ class ProfileForm(TailwindFormMixin, forms.ModelForm):
             self.fields['email'].initial = self.user.email
             if hasattr(self.user, 'profile'):
                 self.instance = self.user.profile
-    
+
     def save(self, commit=True):
         profile = super().save(commit=False)
         if not profile.user_id and self.user:
             profile.user = self.user
-        
+
         # Update email on user model
         if self.user and 'email' in self.cleaned_data:
             self.user.email = self.cleaned_data['email']
             if commit:
                 self.user.save()
-                
+
         # Handle Avatar
         avatar_file = self.cleaned_data.get('avatar')
         if avatar_file:
             from iam.models import UserAvatar
-            
+
             # If profile already has an avatar, update it? Or create new one?
             # Start simple: Create new avatar instance (old one eventually GC'd or we delete it)
             # Better: if exists, update it.
@@ -136,7 +136,7 @@ class ProfileForm(TailwindFormMixin, forms.ModelForm):
 
 class OTPVerifyForm(TailwindFormMixin, forms.Form):
     """Form for OTP verification."""
-    
+
     otp_code = forms.CharField(
         max_length=6,
         min_length=6,

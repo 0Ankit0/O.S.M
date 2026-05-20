@@ -1,9 +1,10 @@
 import pyotp
 
+from config import settings
+
 from ..constants import OTPErrors
 from ..exceptions import OTPVerificationFailure
 from ..models import User
-from config import settings
 
 
 def generate_otp(user: User) -> tuple[str, str]:

@@ -1,6 +1,6 @@
-import uuid
-from django.db import models
 from core.models import BaseModel
+from django.db import models
+
 from .user import User
 
 

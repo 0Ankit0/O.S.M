@@ -1,10 +1,8 @@
 """User Group Assignment Model"""
 
-import uuid
-
-from django.db import models
 
 from core.models import BaseModel
+from django.db import models
 
 from .group import Group
 from .user import User

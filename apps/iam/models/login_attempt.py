@@ -1,6 +1,7 @@
-from django.db import models
-from .user import User
 import hashid_field
+from django.db import models
+
+from .user import User
 
 
 class LoginAttempt(models.Model):

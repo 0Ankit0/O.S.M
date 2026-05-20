@@ -1,5 +1,6 @@
-from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from rest_framework import serializers
+
 from iam.models import Group
 
 User = get_user_model()
@@ -13,7 +14,7 @@ class UpdateGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group
         fields = ['id', 'name', 'permissions']
-        
+
 class ListGroupSerializer(serializers.ModelSerializer):
     class Meta:
         model = Group

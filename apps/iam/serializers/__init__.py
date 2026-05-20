@@ -1,22 +1,22 @@
+from .group_serializer import CreateGroupSerializer, ListGroupSerializer, UpdateGroupSerializer
 from .user_serializer import (
-    CreateUserSerializer,
-    UpdateUserSerializer,
-    ListUserSerializer,
-    CookieTokenRefreshSerializer,
     CookieTokenObtainPairSerializer,
-    LogoutSerializer,
-    GenerateOTPSerializer,
-    VerifyOTPSerializer,
-    ValidateOTPSerializer,
+    CookieTokenRefreshSerializer,
+    CreateUserSerializer,
     DisableOTPSerializer,
-    PasswordResetSerializer,
+    GenerateOTPSerializer,
+    ListUserSerializer,
+    LogoutSerializer,
     PasswordResetConfirmationSerializer,
-    UserSignupSerializer,
-    UserAccountConfirmationSerializer,
+    PasswordResetSerializer,
+    UpdateUserSerializer,
     UserAccountChangePasswordSerializer,
-    UserProfileSerializer
+    UserAccountConfirmationSerializer,
+    UserProfileSerializer,
+    UserSignupSerializer,
+    ValidateOTPSerializer,
+    VerifyOTPSerializer,
 )
-from .group_serializer import CreateGroupSerializer,UpdateGroupSerializer,ListGroupSerializer
 
 __all__ = [
     'CreateUserSerializer', 'UpdateUserSerializer', 'ListUserSerializer',

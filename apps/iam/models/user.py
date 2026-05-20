@@ -2,11 +2,13 @@ import hashid_field
 from core.models.mixins import ImageWithThumbnailMixin
 from core.storage import UniqueFilePathGenerator
 from django.conf import settings
-from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Group, PermissionsMixin
+from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 from django.db import models
 from django.utils.module_loading import import_string
 
 from config.settings import DEFAULT_FILE_STORAGE
+
+from .groups import Group
 
 
 class UserManager(BaseUserManager):
