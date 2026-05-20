@@ -1,11 +1,12 @@
 from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.views.generic import DetailView, ListView
+from core.mixins import RoleAwareBaseTemplateMixin
 
 from .models import Category, Product
 
 
-class MenuListView(ListView):
+class MenuListView(RoleAwareBaseTemplateMixin, ListView):
     template_name = "catalog/menu_list.html"
     context_object_name = "products"
 
@@ -21,7 +22,7 @@ class MenuListView(ListView):
         return context
 
 
-class CategoryProductListView(ListView):
+class CategoryProductListView(RoleAwareBaseTemplateMixin, ListView):
     template_name = "catalog/category_products.html"
     context_object_name = "products"
 
@@ -37,7 +38,7 @@ class CategoryProductListView(ListView):
         return context
 
 
-class ProductDetailView(DetailView):
+class ProductDetailView(RoleAwareBaseTemplateMixin, DetailView):
     template_name = "catalog/product_detail.html"
     context_object_name = "product"
 

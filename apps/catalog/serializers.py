@@ -1,5 +1,5 @@
-from rest_framework import serializers
 from hashid_field import rest as hidrest
+from rest_framework import serializers
 
 from .models import Category, Product
 
