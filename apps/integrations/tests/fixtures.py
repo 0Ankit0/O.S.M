@@ -1,17 +1,12 @@
-import openai
 import pytest
-import pytest_factoryboy
 
 from ..openai import client
-from . import factories
-
-pytest_factoryboy.register(factories.OpenAICompletionResponseFactory)
-pytest_factoryboy.register(factories.OpenAICompletionResponseChoiceFactory)
 
 
 @pytest.fixture
 def openai_completion_mock(mocker):
-    return mocker.patch.object(openai, "Completion", autospec=True)
+    openai_client = mocker.patch.object(client, "OpenAI", autospec=True)
+    return openai_client.return_value.chat.completions
 
 
 @pytest.fixture

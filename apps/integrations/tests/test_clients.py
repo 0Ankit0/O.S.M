@@ -1,5 +1,7 @@
-import openai.error
+import httpx
+
 import pytest
+from openai import APIError
 
 from integrations.openai.client import OPEN_AI_API_ERROR_MSG, OpenAIClient
 from integrations.openai.exceptions import OpenAIClientException
@@ -8,43 +10,36 @@ pytestmark = pytest.mark.django_db
 
 
 class TestOpenAIClientGetSaasIdeas:
-    def test_success(self, mocker, openai_completion_mock, open_ai_completion_response_factory):
-        response_data = open_ai_completion_response_factory.create()
-        create_mock = mocker.Mock(return_value=response_data)
-        openai_completion_mock.create = create_mock
+    def test_success(self, mocker, openai_completion_mock):
+        message = mocker.Mock(content="- Fitness planner\n- AI meal coach\n3. Smart order upsell assistant")
+        response = mocker.Mock(choices=[mocker.Mock(message=message)])
+        openai_completion_mock.create.return_value = response
         keywords = ["fitness", "ai"]
 
         result = OpenAIClient.get_saas_ideas(keywords)
 
-        create_mock.assert_called_once_with(
+        openai_completion_mock.create.assert_called_once_with(
             **{
                 "max_tokens": 200,
-                "model": "text-davinci-003",
-                "prompt": "Get me 3-5 fitness, ai saas ideas",
-                "temperature": 0.5,
+                "model": "gpt-3.5-turbo",
+                "messages": [
+                    {"role": "system", "content": "You are a helpful assistant that generates SaaS ideas."},
+                    {
+                        "role": "user",
+                        "content": "Get me 3-5 fitness, ai saas ideas. Return them as a simple bulleted list.",
+                    },
+                ],
+                "temperature": 0.7,
             }
         )
-        assert result.id == response_data["id"]
-        assert result.object == response_data["object"]
-        assert result.created == response_data["created"]
-        assert result.model == response_data["model"]
-        assert all(
-            {
-                "text": choice.text,
-                "index": choice.index,
-                "logprobs": choice.longprobs,
-                "finish_reason": choice.finish_reason,
-            }
-            in response_data["choices"]
-            for choice in result.choices
-        )
-        assert result.usage.dict() == response_data["usage"]
+        assert result.ideas == ["Fitness planner", "AI meal coach", "Smart order upsell assistant"]
 
-    def test_api_exception(self, mocker, openai_completion_mock):
-        create_mock = mocker.Mock(
-            side_effect=openai.error.APIError("The server had an error while processing your request.")
+    def test_api_exception(self, openai_completion_mock):
+        openai_completion_mock.create.side_effect = APIError(
+            "The server had an error while processing your request.",
+            request=httpx.Request("POST", "https://api.openai.com/v1/chat/completions"),
+            body=None,
         )
-        openai_completion_mock.create = create_mock
 
         with pytest.raises(OpenAIClientException) as error:
             OpenAIClient.get_saas_ideas(["idea"])

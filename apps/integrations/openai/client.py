@@ -1,7 +1,10 @@
-from openai import OpenAI, APIError
-from config import settings
-from .exceptions import OpenAIClientException
+from openai import APIError, OpenAI
 from pydantic import BaseModel
+
+from config import settings
+
+from .exceptions import OpenAIClientException
+
 
 class IdeasResponse(BaseModel):
     ideas: list[str]
@@ -24,7 +27,7 @@ class OpenAIClient:
                 max_tokens=200,
                 temperature=0.7
             )
-            
+
             content = response.choices[0].message.content
             # Simple parsing: split by newlines, remove "-" or numbers
             ideas = []
@@ -36,7 +39,7 @@ class OpenAIClient:
                         ideas.append(cleaned)
 
             return IdeasResponse(ideas=ideas)
-            
+
         except APIError as error:
             raise OpenAIClientException(OPEN_AI_API_ERROR_MSG) from error
         except Exception as error:
