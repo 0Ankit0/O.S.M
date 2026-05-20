@@ -2,10 +2,10 @@ from django.db import DEFAULT_DB_ALIAS, connections
 from django.db.migrations.executor import MigrationExecutor
 from django.http import HttpResponse
 from django.utils.deprecation import MiddlewareMixin
+from iam.utils import reset_auth_cookie, set_auth_cookie
 from rest_framework import status
 from sentry_sdk import capture_exception
 
-from iam.utils import reset_auth_cookie, set_auth_cookie
 from config import settings
 
 

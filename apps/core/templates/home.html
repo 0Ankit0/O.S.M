@@ -21,13 +21,13 @@
       <p>{% trans "Explore featured products and categories." %}</p>
     </div>
   </a>
-  <a href="{% url 'orders:index' %}" class="card bg-base-100 shadow-sm border border-base-300">
+  <a href="{% if request.user.is_authenticated %}{% url 'orders:history' %}{% else %}{% url 'orders:index' %}{% endif %}" class="card bg-base-100 shadow-sm border border-base-300">
     <div class="card-body">
       <h3 class="card-title">{% trans "Track orders" %}</h3>
       <p>{% trans "Review active and historical order milestones." %}</p>
     </div>
   </a>
-  <a href="{% url 'accounts:index' %}" class="card bg-base-100 shadow-sm border border-base-300">
+  <a href="{% if request.user.is_authenticated %}{% url 'iam:settings' %}{% else %}{% url 'iam:login' %}{% endif %}" class="card bg-base-100 shadow-sm border border-base-300">
     <div class="card-body">
       <h3 class="card-title">{% trans "Manage account" %}</h3>
       <p>{% trans "Update profile, addresses, and security settings." %}</p>

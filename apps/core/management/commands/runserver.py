@@ -2,7 +2,9 @@ import os
 import subprocess
 import sys
 import threading
+
 from django.core.management.commands.runserver import Command as RunserverCommand
+
 
 class Command(RunserverCommand):
     def run_tailwind(self):

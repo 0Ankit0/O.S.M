@@ -1,7 +1,4 @@
-from django.utils.deprecation import MiddlewareMixin
 from sentry_sdk import capture_exception
-
-from config import settings
 
 
 class SentryMiddleware:

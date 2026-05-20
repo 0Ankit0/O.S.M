@@ -2,16 +2,15 @@ from datetime import timedelta
 from decimal import Decimal
 from unittest.mock import patch
 
+from catalog.models import Category, Product
+from delivery.models import DeliveryAssignment, DeliveryZone
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.utils import timezone
 from django_hosts.resolvers import reverse
+from orders.models import Order
 from rest_framework import status
 from rest_framework.test import APIClient
-
-from catalog.models import Category, Product
-from delivery.models import DeliveryAssignment, DeliveryZone
-from orders.models import Order
 
 User = get_user_model()
 

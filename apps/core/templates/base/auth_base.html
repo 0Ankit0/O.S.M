@@ -1,28 +1,50 @@
 {% extends "base/base.html" %}
+{% load i18n %}
 
 {% block body %}
-<div class="min-h-full flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-    <div class="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            {% block auth_title %}{% endblock %}
-        </h2>
-        <p class="mt-2 text-center text-sm text-gray-600">
-            {% block auth_subtitle %}{% endblock %}
-        </p>
+<div class="min-h-full bg-[radial-gradient(circle_at_top_left,rgba(59,130,246,0.18),transparent_28%),radial-gradient(circle_at_bottom_right,rgba(14,165,233,0.14),transparent_24%),linear-gradient(to_bottom,rgba(255,255,255,0.18),transparent_30%)]">
+    <div class="mx-auto flex max-w-7xl justify-end px-4 pt-4 sm:px-6 lg:px-8">
+        {% include "partials/theme_selector.html" %}
     </div>
 
-    <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div class="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-            {% if messages %}
-                {% for message in messages %}
-                    <div class="mb-4 p-4 rounded-md {% if message.tags == 'error' %}bg-red-50 text-red-800{% elif message.tags == 'success' %}bg-green-50 text-green-800{% else %}bg-blue-50 text-blue-800{% endif %}">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            {% endif %}
-            
-            {% block auth_content %}{% endblock %}
-        </div>
+    <div class="mx-auto grid max-w-7xl gap-10 px-4 pb-12 pt-6 sm:px-6 lg:grid-cols-[1.05fr_480px] lg:items-center lg:px-8">
+        <section class="rounded-[2rem] border border-base-300/70 bg-base-100/85 p-8 shadow-2xl backdrop-blur sm:p-10">
+            <div class="inline-flex items-center gap-3 rounded-full border border-base-300/70 bg-base-100/90 px-4 py-2 text-sm font-semibold text-base-content shadow-sm">
+                <span class="inline-flex h-9 w-9 items-center justify-center rounded-2xl bg-primary text-primary-content shadow-md">OMS</span>
+                <span>{% trans "Restaurant OMS" %}</span>
+            </div>
+            <h1 class="mt-8 max-w-xl text-4xl font-semibold tracking-tight text-base-content sm:text-5xl">{% trans "A cleaner way to run storefront, ordering, and operations workflows." %}</h1>
+            <p class="mt-4 max-w-2xl text-base leading-7 text-base-content/70">{% trans "Sign in to review orders, manage finances, coordinate delivery, and keep the customer experience consistent across every page." %}</p>
+            <div class="mt-8 grid gap-4 sm:grid-cols-3">
+                <div class="rounded-[1.5rem] border border-base-300/70 bg-base-200/70 p-4 shadow-sm">
+                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-base-content/45">{% trans "Ordering" %}</p>
+                    <p class="mt-2 text-sm text-base-content/75">{% trans "Track carts, checkout, and order history." %}</p>
+                </div>
+                <div class="rounded-[1.5rem] border border-base-300/70 bg-base-200/70 p-4 shadow-sm">
+                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-base-content/45">{% trans "Operations" %}</p>
+                    <p class="mt-2 text-sm text-base-content/75">{% trans "Review delivery, reporting, and storefront content." %}</p>
+                </div>
+                <div class="rounded-[1.5rem] border border-base-300/70 bg-base-200/70 p-4 shadow-sm">
+                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-base-content/45">{% trans "Theme" %}</p>
+                    <p class="mt-2 text-sm text-base-content/75">{% trans "The selected theme applies consistently across auth, customer, and admin pages." %}</p>
+                </div>
+            </div>
+        </section>
+
+        <section class="rounded-[2rem] border border-base-300/70 bg-base-100/92 p-8 shadow-2xl backdrop-blur sm:p-10">
+            <h2 class="text-3xl font-semibold tracking-tight text-base-content">
+                {% block auth_title %}{% endblock %}
+            </h2>
+            <p class="mt-3 text-sm leading-6 text-base-content/65">
+                {% block auth_subtitle %}{% endblock %}
+            </p>
+
+            {% include 'partials/alerts.html' %}
+
+            <div class="mt-8">
+                {% block auth_content %}{% endblock %}
+            </div>
+        </section>
     </div>
 </div>
 {% endblock %}

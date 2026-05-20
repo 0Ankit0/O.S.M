@@ -1,8 +1,8 @@
-import uuid
 import hashid_field
-from django.db import models
 from django.conf import settings
+from django.db import models
 from django.utils import timezone
+
 
 class DeleteQuerySet(models.QuerySet):
     """QuerySet for delete"""
@@ -34,10 +34,10 @@ class BaseManager(models.Manager.from_queryset(BaseQuerySet)):
 
 class BaseModel(models.Model):
     id = hashid_field.HashidAutoField(primary_key=True)
-    
+
     created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='created_%(class)s_set', null=True, blank=True)
-    
+
     updated_at = models.DateTimeField(auto_now=True)
     updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='updated_%(class)s_set', null=True, blank=True)
 
@@ -77,4 +77,4 @@ class BaseModel(models.Model):
 
 
 
-        
+

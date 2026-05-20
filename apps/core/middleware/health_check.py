@@ -3,7 +3,7 @@ from django.db.migrations.executor import MigrationExecutor
 from django.http import HttpResponse
 from django.utils.deprecation import MiddlewareMixin
 from rest_framework import status
-from config import settings
+
 
 class HealthCheckMiddleware(MiddlewareMixin):
     """Middleware for health checking the application."""

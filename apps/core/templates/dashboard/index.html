@@ -1,52 +1,103 @@
-{% extends 'base_admin.html' %}
+{% extends base_template %}
 {% load i18n %}
 
-{% block title %}{% trans "Operations Dashboard" %}{% endblock %}
-{% block page_title %}{% trans "Operations Dashboard" %}{% endblock %}
+{% block title %}{% if request.user.is_staff %}{% trans "Operations Dashboard" %}{% else %}{% trans "Customer Dashboard" %}{% endif %}{% endblock %}
+{% block page_title %}{% if request.user.is_staff %}{% trans "Operations Dashboard" %}{% else %}{% trans "Customer Dashboard" %}{% endif %}{% endblock %}
 
-{% block primary_actions %}
-<a href="{% url 'orders:index' %}" class="btn btn-primary btn-sm">{% trans "Open Orders" %}</a>
+{% block page_actions %}
+{% if request.user.is_staff %}
+<a href="{% url 'delivery:index' %}" class="btn btn-primary btn-sm">{% trans "Open Delivery" %}</a>
+{% else %}
+<a href="{% url 'orders:history' %}" class="btn btn-primary btn-sm">{% trans "View Orders" %}</a>
+{% endif %}
 {% endblock %}
 
 {% block content %}
-<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-  <div class="card bg-base-100 shadow-sm border border-base-300">
-    <div class="card-body">
-      <h2 class="card-title">{% trans "Notifications" %}</h2>
-      <p>{% blocktrans %}You have {{ unread_count }} unread notifications.{% endblocktrans %}</p>
+<section class="rounded-[2rem] border border-base-300/70 bg-gradient-to-br from-primary/12 via-base-100 to-secondary/10 p-6 shadow-xl sm:p-8">
+  <div class="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+    <div class="max-w-2xl">
+      <p class="text-xs font-semibold uppercase tracking-[0.24em] text-base-content/45">{% if request.user.is_staff %}{% trans "Operations overview" %}{% else %}{% trans "Customer overview" %}{% endif %}</p>
+      <h2 class="mt-3 text-3xl font-semibold tracking-tight text-base-content">{% if request.user.is_staff %}{% trans "Keep the platform running with a clean view of the essentials." %}{% else %}{% trans "Stay on top of orders, payments, and account activity in one place." %}{% endif %}</h2>
+      <p class="mt-3 text-base text-base-content/70">{% if request.user.is_staff %}{% trans "Review unread activity, active organizations, and the fastest paths into your daily admin workflows." %}{% else %}{% trans "Start from the pages you use most often and keep your account actions organized under a consistent theme." %}{% endif %}</p>
+    </div>
+    <div class="grid gap-3 sm:grid-cols-2 xl:min-w-[340px]">
+      <div class="rounded-[1.5rem] border border-base-300/70 bg-base-100/90 p-4 shadow-sm">
+        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-base-content/45">{% trans "Unread" %}</p>
+        <p class="mt-2 text-3xl font-semibold text-base-content">{{ unread_count }}</p>
+      </div>
+      <div class="rounded-[1.5rem] border border-base-300/70 bg-base-100/90 p-4 shadow-sm">
+        <p class="text-xs font-semibold uppercase tracking-[0.2em] text-base-content/45">{% trans "Organizations" %}</p>
+        <p class="mt-2 text-3xl font-semibold text-base-content">{{ tenants|length }}</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="grid grid-cols-1 gap-6 xl:grid-cols-[1.1fr_1.1fr_0.9fr]">
+  <div class="card border border-base-300/70 bg-base-100/90 shadow-xl">
+    <div class="card-body gap-4">
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[0.22em] text-base-content/45">{% trans "Notifications" %}</p>
+          <h2 class="card-title text-2xl">{% trans "Recent activity" %}</h2>
+        </div>
+        <span class="badge badge-primary badge-lg">{{ unread_count }}</span>
+      </div>
+      <p class="text-base-content/70">{% blocktrans %}You have {{ unread_count }} unread notifications.{% endblocktrans %}</p>
       <div class="card-actions justify-end">
-        <a href="{% url 'notifications:list' %}" class="btn btn-primary btn-sm">{% trans "View all" %}</a>
+        <a href="{% url 'notifications:list' %}" class="btn btn-primary rounded-full">{% trans "View all" %}</a>
       </div>
     </div>
   </div>
 
-  <div class="card bg-base-100 shadow-sm border border-base-300">
-    <div class="card-body">
-      <h2 class="card-title">{% trans "Organizations" %}</h2>
-      <ul class="menu bg-base-100 w-full p-2 rounded-box">
+  <div class="card border border-base-300/70 bg-base-100/90 shadow-xl">
+    <div class="card-body gap-4">
+      <div class="flex items-center justify-between gap-3">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[0.22em] text-base-content/45">{% trans "Organizations" %}</p>
+          <h2 class="card-title text-2xl">{% trans "Active workspaces" %}</h2>
+        </div>
+        <span class="badge badge-outline badge-lg">{{ tenants|length }}</span>
+      </div>
+      <ul class="menu gap-2 rounded-[1.5rem] bg-base-200/70 p-3">
         {% for membership in tenants %}
         <li>
-          <a href="{% url 'multitenancy:switch' membership.tenant.id %}" class="{% if request.session.active_tenant_id == membership.tenant.id %}active{% endif %}">
-            {{ membership.tenant.name }}
+          <a href="{% url 'multitenancy:switch' membership.tenant.id %}" class="rounded-2xl {% if request.session.active_tenant_id == membership.tenant.id %}active{% endif %}">
+            <span>{{ membership.tenant.name }}</span>
+            {% if request.session.active_tenant_id == membership.tenant.id %}
+            <span class="badge badge-primary badge-sm">{% trans "Current" %}</span>
+            {% endif %}
           </a>
         </li>
         {% empty %}
-        <li><a>{% trans "No organizations found" %}</a></li>
+        <li><a class="rounded-2xl">{% trans "No organizations found" %}</a></li>
         {% endfor %}
       </ul>
       <div class="card-actions justify-end">
-        <a href="{% url 'multitenancy:create' %}" class="btn btn-secondary btn-sm">{% trans "Create New" %}</a>
+        <a href="{% url 'multitenancy:create' %}" class="btn btn-secondary rounded-full">{% trans "Create New" %}</a>
       </div>
     </div>
   </div>
 
-  <div class="card bg-base-100 shadow-sm border border-base-300">
-    <div class="card-body">
-      <h2 class="card-title">{% trans "Quick links" %}</h2>
-      <div class="flex flex-col gap-2">
-        <a href="{% url 'catalog:index' %}" class="btn btn-ghost justify-start">{% trans "Catalog" %}</a>
-        <a href="{% url 'payments:index' %}" class="btn btn-ghost justify-start">{% trans "Payments" %}</a>
-        <a href="{% url 'reporting:index' %}" class="btn btn-ghost justify-start">{% trans "Reporting" %}</a>
+  <div class="card border border-base-300/70 bg-base-100/90 shadow-xl">
+    <div class="card-body gap-4">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-[0.22em] text-base-content/45">{% trans "Quick links" %}</p>
+        <h2 class="card-title text-2xl">{% trans "Jump back in" %}</h2>
+      </div>
+      <div class="grid gap-2">
+        {% if request.user.is_staff %}
+        <a href="{% url 'catalog:index' %}" class="btn btn-ghost justify-between rounded-2xl">{% trans "Catalog" %}<span class="text-base-content/45">→</span></a>
+        <a href="{% url 'payments:index' %}" class="btn btn-ghost justify-between rounded-2xl">{% trans "Payments" %}<span class="text-base-content/45">→</span></a>
+        <a href="{% url 'delivery:index' %}" class="btn btn-ghost justify-between rounded-2xl">{% trans "Delivery" %}<span class="text-base-content/45">→</span></a>
+        <a href="{% url 'reporting:index' %}" class="btn btn-ghost justify-between rounded-2xl">{% trans "Reporting" %}<span class="text-base-content/45">→</span></a>
+        {% else %}
+        <a href="{% url 'catalog:index' %}" class="btn btn-ghost justify-between rounded-2xl">{% trans "Menu" %}<span class="text-base-content/45">→</span></a>
+        <a href="{% url 'orders:cart' %}" class="btn btn-ghost justify-between rounded-2xl">{% trans "Cart" %}<span class="text-base-content/45">→</span></a>
+        <a href="{% url 'orders:history' %}" class="btn btn-ghost justify-between rounded-2xl">{% trans "Order History" %}<span class="text-base-content/45">→</span></a>
+        <a href="{% url 'payments:index' %}" class="btn btn-ghost justify-between rounded-2xl">{% trans "Payments" %}<span class="text-base-content/45">→</span></a>
+        <a href="{% url 'iam:settings' %}" class="btn btn-ghost justify-between rounded-2xl">{% trans "Settings" %}<span class="text-base-content/45">→</span></a>
+        {% endif %}
       </div>
     </div>
   </div>

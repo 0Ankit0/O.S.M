@@ -1,5 +1,4 @@
 from django import template
-from django.urls import reverse
 
 register = template.Library()
 
@@ -14,17 +13,17 @@ def is_active(context, url_name=None, namespace=None, part_match=None):
     request = context.get('request')
     if not request:
         return ''
-    
+
     resolver_match = request.resolver_match
     if not resolver_match:
         return ''
 
     if url_name and resolver_match.url_name == url_name:
         return 'active'
-        
+
     if namespace and resolver_match.namespace == namespace:
         return 'active'
-        
+
     if part_match:
         # Check if part_match string is in the current namespaces or url name
         if (resolver_match.url_name and part_match in resolver_match.url_name) or \

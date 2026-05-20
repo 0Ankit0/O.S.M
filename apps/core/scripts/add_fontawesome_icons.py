@@ -183,7 +183,7 @@ def main():
         print(f"CSS file not found: {args.css}")
         sys.exit(2)
 
-    with open(args.css, "r", encoding="utf-8", errors="ignore") as f:
+    with open(args.css, encoding="utf-8", errors="ignore") as f:
         css_text = f.read()
 
     records = parse_fontawesome_css(css_text)

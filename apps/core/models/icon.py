@@ -1,7 +1,6 @@
 """Icon Model - FontAwesome Icons"""
 
 import hashid_field
-
 from django.db import models
 
 

@@ -1,7 +1,6 @@
 from io import BytesIO
 
 from django.core.files.base import ContentFile
-from django.db import models
 from django.utils.translation import gettext as _
 from PIL import Image
 from rest_framework.exceptions import ValidationError

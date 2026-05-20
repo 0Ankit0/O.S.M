@@ -1,6 +1,7 @@
-from django.http import HttpResponse
 from django.utils.deprecation import MiddlewareMixin
+
 from config import settings
+
 
 class ManageCookiesMiddleware(MiddlewareMixin):
     """Middleware for managing cookies."""
