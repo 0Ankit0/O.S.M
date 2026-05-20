@@ -5,7 +5,6 @@ import factory
 from django.utils import timezone
 from djstripe import enums
 from djstripe import models as djstripe_models
-
 from multitenancy.tests import factories as multitenancy_factories
 
 from .. import constants, models
@@ -283,7 +282,7 @@ class SubscriptionScheduleFactory(factory.django.DjangoModelFactory):
         self.phases = [phase, *rest_phases]
 
 
-class WebhookEventFactory(factory.django.DjangoModelFactory):
+class DjstripeWebhookEventFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = djstripe_models.Event
 
@@ -351,7 +350,7 @@ class PaymentTransactionFactory(factory.django.DjangoModelFactory):
         )
 
 
-class WebhookEventFactory(factory.django.DjangoModelFactory):
+class PaymentWebhookEventFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = models.WebhookEvent
 

@@ -1,6 +1,7 @@
 from django.contrib import admin
 from djstripe import admin as djstripe_admin
 from djstripe import models as djstripe_models
+
 from .models import PaymentTransaction, WebhookEvent
 
 admin.site.unregister(djstripe_models.PaymentIntent)
@@ -20,7 +21,7 @@ class ChargeAdmin(djstripe_admin.StripeModelAdmin):
 @admin.register(PaymentTransaction)
 class PaymentTransactionAdmin(admin.ModelAdmin):
     """Admin interface for PaymentTransaction"""
-    
+
     list_display = [
         'id',
         'gateway',
@@ -66,7 +67,7 @@ class PaymentTransactionAdmin(admin.ModelAdmin):
             'fields': ('created_at', 'updated_at')
         }),
     )
-    
+
     def has_add_permission(self, request):
         """Disable manual creation of payment transactions"""
         return False
@@ -75,7 +76,7 @@ class PaymentTransactionAdmin(admin.ModelAdmin):
 @admin.register(WebhookEvent)
 class WebhookEventAdmin(admin.ModelAdmin):
     """Admin interface for WebhookEvent"""
-    
+
     list_display = [
         'id',
         'gateway',
@@ -114,7 +115,7 @@ class WebhookEventAdmin(admin.ModelAdmin):
             'fields': ('created_at',)
         }),
     )
-    
+
     def has_add_permission(self, request):
         """Disable manual creation of webhook events"""
         return False

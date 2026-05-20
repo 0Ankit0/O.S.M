@@ -1,6 +1,6 @@
 from urllib.parse import urlencode
 
-from stripe.api_requestor import _api_encode
+from stripe._encode import _api_encode
 
 
 def stripe_encode(data):

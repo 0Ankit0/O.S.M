@@ -1,4 +1,4 @@
-{% extends "base/dashboard_base.html" %}
+{% extends base_template %}
 
 {% block title %}Payment Methods - Django Template{% endblock %}
 {% block page_title %}Payment Methods{% endblock %}
@@ -82,7 +82,9 @@
         <!-- Payment Actions -->
         <div class="card bg-base-100 shadow-lg border border-base-200">
             <div class="card-body">
+                {% if online_payment_enabled %}
                 <!-- Add Card Form -->
+                {% if stripe_enabled %}
                 <div id="add-card-section" class="hidden">
                     <div class="flex items-center justify-between mb-6">
                         <h3 class="font-bold text-lg">Add New Card</h3>
@@ -106,23 +108,28 @@
                         <div id="payment-message" class="hidden alert alert-error text-sm"></div>
                     </form>
                 </div>
+                {% endif %}
 
                 <!-- Gateway Selection / Main Actions -->
                 <div id="payment-gateways" class="space-y-4">
                     <h3 class="font-bold text-lg mb-4">Payment Options</h3>
 
+                    {% if stripe_enabled and payment_methods %}
                     <button id="pay-button" onclick="payWithSelectedMethod()" class="btn btn-primary btn-block btn-lg hidden relative overflow-hidden">
                         <div class="flex items-center justify-center gap-2">
                             <i data-lucide="credit-card" class="w-5 h-5"></i>
                             <span>Pay with Saved Card</span>
                         </div>
                     </button>
+                    {% endif %}
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {% if stripe_enabled %}
                         <button onclick="toggleAddCard(true)" class="btn btn-outline h-auto py-4 flex flex-col items-center gap-2 hover:bg-base-200 hover:border-base-content/20">
                             <span class="bg-base-200 p-2 rounded-full"><i data-lucide="plus" class="w-5 h-5"></i></span>
                             <span class="font-medium">Add New Card</span>
                         </button>
+                        {% endif %}
 
                         {% for gateway_id, gateway_config in payment_gateways.items %}
                             {% if gateway_config.enabled %}
@@ -147,20 +154,61 @@
                     <i data-lucide="alert-circle" class="w-6 h-6"></i>
                     <span id="error-message"></span>
                 </div>
+                {% else %}
+                <div class="alert alert-info shadow-sm">
+                    <span>Online payment providers are not configured in this environment. Add real Stripe or Khalti credentials to enable saved cards and checkout integrations.</span>
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
 </div>
 
+{% if stripe_enabled %}
 <script src="https://js.stripe.com/v3/"></script>
+{% endif %}
 <script>
     // Stripe Elements & Add Card Logic
+    const stripeEnabled = {{ stripe_enabled|yesno:"true,false" }};
     let elements;
     let paymentElement;
+    const stripe = stripeEnabled ? Stripe("{{ stripe_public_key }}") : null;
+
+    function selectPaymentMethod(paymentMethodId) {
+        const selectedInput = document.getElementById(`pm_${paymentMethodId}`);
+        const payButton = document.getElementById('pay-button');
+        if (selectedInput) {
+            selectedInput.checked = true;
+        }
+        if (payButton) {
+            payButton.classList.remove('hidden');
+        }
+    }
+
+    async function payWithSelectedMethod() {
+        const selectedInput = document.querySelector('input[name="payment_method"]:checked');
+        if (!selectedInput) {
+            const errorEl = document.getElementById('payment-error');
+            const errorMsgEl = document.getElementById('error-message');
+            if (errorEl && errorMsgEl) {
+                errorMsgEl.textContent = 'Select a saved card before continuing.';
+                errorEl.classList.remove('hidden');
+            }
+            return;
+        }
+        await initiatePayment('stripe', selectedInput.value);
+    }
 
     async function toggleAddCard(show) {
+        if (!stripeEnabled) {
+            return;
+        }
         const section = document.getElementById('add-card-section');
         const gateways = document.getElementById('payment-gateways');
+
+        if (!section || !gateways) {
+            return;
+        }
 
         if (show) {
             section.classList.remove('hidden');
@@ -175,6 +223,9 @@
     }
 
     async function initializeStripeElements() {
+        if (!stripeEnabled || !stripe) {
+            return;
+        }
         const spinner = document.getElementById('spinner');
         const buttonText = document.getElementById('button-text');
 
@@ -216,45 +267,47 @@
     }
 
     const form = document.getElementById('payment-form');
-    form.addEventListener('submit', async (event) => {
-        event.preventDefault();
+    if (form) {
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
 
-        if (!stripe || !elements) {
-            return;
-        }
+            if (!stripe || !elements) {
+                return;
+            }
 
-        const submitButton = document.getElementById('submit-button');
-        const spinner = document.getElementById('spinner');
-        const buttonText = document.getElementById('button-text');
-        const messageContainer = document.querySelector('#payment-message');
+            const submitButton = document.getElementById('submit-button');
+            const spinner = document.getElementById('spinner');
+            const buttonText = document.getElementById('button-text');
+            const messageContainer = document.querySelector('#payment-message');
 
-        submitButton.disabled = true;
-        spinner.classList.remove('hidden');
-        buttonText.classList.add('hidden');
-        messageContainer.classList.add('hidden');
+            submitButton.disabled = true;
+            spinner.classList.remove('hidden');
+            buttonText.classList.add('hidden');
+            messageContainer.classList.add('hidden');
 
-        const { error, setupIntent } = await stripe.confirmSetup({
-            elements,
-            confirmParams: {
-                return_url: window.location.href,
-            },
-            redirect: 'if_required'
+            const { error, setupIntent } = await stripe.confirmSetup({
+                elements,
+                confirmParams: {
+                    return_url: window.location.href,
+                },
+                redirect: 'if_required'
+            });
+
+            if (error) {
+                messageContainer.textContent = error.message;
+                messageContainer.classList.remove('hidden');
+                submitButton.disabled = false;
+                spinner.classList.add('hidden');
+                buttonText.classList.remove('hidden');
+            } else if (setupIntent && setupIntent.status === 'succeeded') {
+                // Reload to show new card
+                window.location.reload();
+            } else {
+                 // Handle 3DS redirect or other statuses
+                 console.log('Setup status:', setupIntent ? setupIntent.status : 'unknown');
+            }
         });
-
-        if (error) {
-            messageContainer.textContent = error.message;
-            messageContainer.classList.remove('hidden');
-            submitButton.disabled = false;
-            spinner.classList.add('hidden');
-            buttonText.classList.remove('hidden');
-        } else if (setupIntent && setupIntent.status === 'succeeded') {
-            // Reload to show new card
-            window.location.reload();
-        } else {
-             // Handle 3DS redirect or other statuses
-             console.log('Setup status:', setupIntent ? setupIntent.status : 'unknown');
-        }
-    });
+    }
 
     // Clean URL query params to hide sensitive info
     if (window.history.replaceState) {
@@ -265,9 +318,6 @@
             window.history.replaceState(null, '', url.toString());
         }
     }
-
-    const stripe = Stripe("{{ stripe_public_key }}");
-    // ... (rest of js is mostly same logic, but we need to update payload)
 
     // JS Update for payload Construction
     async function initiatePayment(gateway, paymentMethodId = null) {

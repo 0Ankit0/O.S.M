@@ -1,10 +1,9 @@
 import logging
 
+import stripe
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-import stripe
-
 from multitenancy.models import Tenant
 
 from .services import subscriptions

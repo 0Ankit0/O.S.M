@@ -2,8 +2,8 @@ import datetime
 import logging
 
 from django.utils import timezone
-from djstripe import models as djstripe_models
 from djstripe import event_handlers
+from djstripe import models as djstripe_models
 
 from . import constants, models, notifications
 from .services import charges, customers, subscriptions

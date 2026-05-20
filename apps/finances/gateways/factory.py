@@ -1,5 +1,6 @@
 """Payment gateway factory for managing gateway instances"""
 
+from django.conf import settings
 
 from .base import BasePaymentGateway
 from .khalti_gateway import KhaltiGateway
@@ -31,9 +32,12 @@ class PaymentGatewayFactory:
         Raises:
             ValueError: If gateway is not registered
         """
-        gateway_class = cls._gateways.get(name.lower())
+        normalized_name = name.lower()
+        gateway_class = cls._gateways.get(normalized_name)
         if not gateway_class:
             raise ValueError(f"Unknown payment gateway: {name}")
+        if normalized_name not in cls.get_available_gateways():
+            raise ValueError(f"Payment gateway is not enabled: {name}")
 
         return gateway_class()
 
@@ -51,4 +55,4 @@ class PaymentGatewayFactory:
     @classmethod
     def get_available_gateways(cls) -> list:
         """Get list of registered gateway names"""
-        return list(cls._gateways.keys())
+        return [name for name in settings.ENABLED_PAYMENT_GATEWAYS if name in cls._gateways]

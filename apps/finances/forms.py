@@ -1,6 +1,7 @@
 import stripe
 from django import forms
 from django.conf import settings
+from django.utils import timezone
 from djstripe.models import Price, Product
 
 
@@ -46,33 +47,72 @@ class PlanCreationForm(forms.Form):
         # Check if Stripe is configured
         if "<CHANGE_ME>" in settings.STRIPE_TEST_SECRET_KEY:
             # Fallback for local testing without Stripe (Mocking)
-            # Create local product/price directly
+            # Create Stripe-like objects locally so dj-stripe-backed properties work.
             import random
             import string
 
             def generate_id(prefix):
                 return f"{prefix}_{''.join(random.choices(string.ascii_letters + string.digits, k=14))}"
 
+            created_at = timezone.now()
+            stripe_created_at = int(created_at.timestamp())
+            product_id = generate_id("prod")
+            price_id = generate_id("price")
+
             product = Product.objects.create(
-                id=generate_id("prod"),
+                id=product_id,
                 name=data["name"],
                 active=True,
-                type="service",  # Default for plans
+                livemode=False,
+                created=created_at,
+                metadata={},
+                stripe_data={
+                    "id": product_id,
+                    "object": "product",
+                    "active": True,
+                    "created": stripe_created_at,
+                    "description": data.get("description", ""),
+                    "livemode": False,
+                    "metadata": {},
+                    "name": data["name"],
+                    "type": "service",
+                    "updated": stripe_created_at,
+                },
             )
 
             Price.objects.create(
-                id=generate_id("price"),
+                id=price_id,
                 product=product,
-                unit_amount_decimal=data["amount"],  # djstripe stores as decimal
                 currency=data["currency"],
+                nickname="",
                 active=True,
-                type="recurring",
-                recurring={
-                    "interval": data["interval"],
-                    "interval_count": 1,
-                    "usage_type": "licensed",
-                    "aggregate_usage": None,
-                    "trial_period_days": None,
+                livemode=False,
+                created=created_at,
+                lookup_key=None,
+                metadata={},
+                stripe_data={
+                    "id": price_id,
+                    "object": "price",
+                    "active": True,
+                    "billing_scheme": "per_unit",
+                    "created": stripe_created_at,
+                    "currency": data["currency"],
+                    "livemode": False,
+                    "lookup_key": None,
+                    "metadata": {},
+                    "nickname": "",
+                    "product": product.id,
+                    "recurring": {
+                        "interval": data["interval"],
+                        "interval_count": 1,
+                        "usage_type": "licensed",
+                        "aggregate_usage": None,
+                        "trial_period_days": None,
+                    },
+                    "tax_behavior": "unspecified",
+                    "type": "recurring",
+                    "unit_amount": int(data["amount"] * 100),
+                    "unit_amount_decimal": str(data["amount"]),
                 },
             )
             return product

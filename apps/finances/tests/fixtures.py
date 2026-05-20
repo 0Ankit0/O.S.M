@@ -20,10 +20,10 @@ pytest_factoryboy.register(factories.ProductFactory)
 pytest_factoryboy.register(factories.SubscriptionFactory)
 pytest_factoryboy.register(factories.SubscriptionItemFactory)
 pytest_factoryboy.register(factories.SubscriptionScheduleFactory)
-pytest_factoryboy.register(factories.WebhookEventFactory)
+pytest_factoryboy.register(factories.DjstripeWebhookEventFactory, "webhook_event")
 pytest_factoryboy.register(factories.RefundFactory)
 pytest_factoryboy.register(factories.PaymentTransactionFactory)
-pytest_factoryboy.register(factories.WebhookEventFactory, "payment_webhook_event")
+pytest_factoryboy.register(factories.PaymentWebhookEventFactory, "payment_webhook_event")
 
 
 @pytest.fixture(autouse=True)

@@ -3,6 +3,7 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.urls import reverse_lazy
 from django.views.generic import TemplateView
 from django.views.generic.edit import FormView
+from core.mixins import RoleAwareBaseTemplateMixin
 from djstripe import models as djstripe_models
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -95,7 +96,7 @@ class SubscriptionScheduleViewSet(viewsets.ModelViewSet):
         return Response({"message": "Subscription cancelled"}, status=status.HTTP_200_OK)
 
 
-class FinancesView(LoginRequiredMixin, TemplateView):
+class FinancesView(LoginRequiredMixin, RoleAwareBaseTemplateMixin, TemplateView):
     """Finances overview."""
 
     template_name = "finances/index.html"
@@ -110,7 +111,7 @@ class FinancesView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class PaymentMethodsView(LoginRequiredMixin, TemplateView):
+class PaymentMethodsView(LoginRequiredMixin, RoleAwareBaseTemplateMixin, TemplateView):
     """Manage payment methods."""
 
     template_name = "finances/payment_methods.html"
@@ -121,6 +122,8 @@ class PaymentMethodsView(LoginRequiredMixin, TemplateView):
 
         # Get enabled gateways from settings
         context["payment_gateways"] = settings.PAYMENT_GATEWAYS
+        context["stripe_enabled"] = settings.PAYMENT_GATEWAYS["stripe"]["enabled"]
+        context["online_payment_enabled"] = bool(settings.ENABLED_PAYMENT_GATEWAYS)
 
         # Check if this is a plan subscription
         plan_id = self.request.GET.get("plan")
@@ -168,7 +171,7 @@ class PaymentMethodsView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class SubscriptionView(LoginRequiredMixin, TemplateView):
+class SubscriptionView(LoginRequiredMixin, RoleAwareBaseTemplateMixin, TemplateView):
     """Subscription management."""
 
     template_name = "finances/subscription.html"
@@ -181,7 +184,7 @@ class SubscriptionView(LoginRequiredMixin, TemplateView):
         return context
 
 
-class AddPlanView(LoginRequiredMixin, FormView):
+class AddPlanView(LoginRequiredMixin, RoleAwareBaseTemplateMixin, FormView):
     template_name = "finances/add_plan.html"
     form_class = PlanCreationForm
     success_url = reverse_lazy("finances:index")

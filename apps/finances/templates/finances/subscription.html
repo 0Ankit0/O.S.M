@@ -1,4 +1,4 @@
-{% extends "base/dashboard_base.html" %}
+{% extends base_template %}
 
 {% block title %}Subscription - Django Template{% endblock %}
 {% block page_title %}Manage Subscription{% endblock %}
@@ -33,7 +33,7 @@
                             <h3 class="card-title">{{ plan.name }} - {{ price.nickname|default:price.recurring.interval|title }}</h3>
                         </div>
                         <p class="text-3xl font-bold">
-                            {{ price.unit_amount_decimal|default:"0"|floatform:2 }}
+                            {{ price.unit_amount_decimal|default:"0"|floatformat:2 }}
                             <span class="text-sm font-normal text-base-content/60">/ {{ price.currency|upper }} / {{ price.recurring.interval }}</span>
                         </p>
                         <p class="text-base-content/60">{{ plan.description|default:"" }}</p>
