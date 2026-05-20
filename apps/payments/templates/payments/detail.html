@@ -1,37 +1,78 @@
-{% extends 'base_admin.html' %}
+{% extends base_template %}
 
 {% block title %}Payment #{{ transaction.id }}{% endblock %}
 {% block page_title %}Payment #{{ transaction.id }}{% endblock %}
 
 {% block content %}
-<div class="space-y-4">
-  <div class="card bg-base-100 border border-base-300 shadow-sm">
-    <div class="card-body">
-      <p><strong>Order:</strong> {{ transaction.order_id }}</p>
-      <p><strong>Provider:</strong> {{ transaction.provider|upper }}</p>
-      <p><strong>Status:</strong> {{ transaction.get_status_display }}</p>
-      <p><strong>Amount:</strong> {{ transaction.amount }} {{ transaction.currency }}</p>
-      <p><strong>Provider Transaction ID:</strong> {{ transaction.provider_transaction_id }}</p>
-      <div class="flex gap-2 mt-4">
-        <form method="post" action="{% url 'payments:refresh' transaction.id %}">
-          {% csrf_token %}
-          <button class="btn btn-outline" type="submit">Refresh status</button>
-        </form>
-        {% if transaction.status == 'completed' %}
-          <a href="{% url 'payments:refund' transaction.id %}" class="btn btn-warning">Request refund</a>
-        {% endif %}
-        {% if transaction.payment_url %}
-          <a class="btn btn-primary" href="{{ transaction.payment_url }}">Open payment URL</a>
-        {% endif %}
+<div class="space-y-6">
+  <section class="rounded-[2rem] border border-base-300/70 bg-gradient-to-br from-primary/12 via-base-100 to-secondary/10 p-6 shadow-xl sm:p-8">
+    <div class="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+      <div class="max-w-3xl">
+        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-base-content/45">Payment detail</p>
+        <h2 class="mt-3 text-3xl font-semibold tracking-tight text-base-content">Transaction #{{ transaction.id }}</h2>
+        <p class="mt-3 text-base text-base-content/70">Created {{ transaction.created_at|date:"M j, Y g:i A" }} and most recently updated {{ transaction.updated_at|date:"M j, Y g:i A" }}.</p>
       </div>
+      <span class="badge badge-lg {% if transaction.status == 'completed' %}badge-success{% elif transaction.status == 'failed' %}badge-error{% elif transaction.status == 'refund_pending' %}badge-warning{% elif transaction.status == 'refunded' %}badge-info{% else %}badge-ghost{% endif %}">{{ transaction.get_status_display }}</span>
+    </div>
+  </section>
+
+  <div class="grid gap-4 lg:grid-cols-4">
+    <div class="rounded-[1.5rem] border border-base-300/70 bg-base-100/95 px-5 py-4 shadow-lg">
+      <p class="text-xs uppercase tracking-[0.2em] text-base-content/45">Order</p>
+      <p class="mt-2 text-2xl font-semibold text-base-content">#{{ transaction.order_id }}</p>
+    </div>
+    <div class="rounded-[1.5rem] border border-base-300/70 bg-base-100/95 px-5 py-4 shadow-lg">
+      <p class="text-xs uppercase tracking-[0.2em] text-base-content/45">Provider</p>
+      <p class="mt-2 text-2xl font-semibold text-base-content">{{ transaction.provider|upper }}</p>
+    </div>
+    <div class="rounded-[1.5rem] border border-base-300/70 bg-base-100/95 px-5 py-4 shadow-lg">
+      <p class="text-xs uppercase tracking-[0.2em] text-base-content/45">Amount</p>
+      <p class="mt-2 text-2xl font-semibold text-base-content">{{ transaction.amount }} {{ transaction.currency }}</p>
+    </div>
+    <div class="rounded-[1.5rem] border border-base-300/70 bg-base-100/95 px-5 py-4 shadow-lg">
+      <p class="text-xs uppercase tracking-[0.2em] text-base-content/45">Provider ID</p>
+      <p class="mt-2 text-sm font-medium text-base-content break-all">{{ transaction.provider_transaction_id }}</p>
     </div>
   </div>
 
-  <div class="card bg-base-100 border border-base-300 shadow-sm">
-    <div class="card-body">
-      <h3 class="font-semibold">Provider Response</h3>
-      <pre class="overflow-auto text-xs">{{ transaction.provider_response|pprint }}</pre>
-    </div>
+  <div class="grid gap-6 xl:grid-cols-[1fr_0.95fr]">
+    <section class="card border border-base-300/70 bg-base-100/95 shadow-xl">
+      <div class="card-body gap-5">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[0.24em] text-base-content/45">Actions</p>
+          <h3 class="mt-2 text-2xl font-semibold text-base-content">Manage this transaction</h3>
+        </div>
+        <div class="flex flex-wrap gap-3">
+          <a href="{% url 'orders:detail' transaction.order_id %}" class="btn btn-ghost">Open order</a>
+          {% if provider_available %}
+          <form method="post" action="{% url 'payments:refresh' transaction.id %}">
+            {% csrf_token %}
+            <button class="btn btn-outline" type="submit">Refresh status</button>
+          </form>
+          {% if transaction.status == 'completed' %}
+          <a href="{% url 'payments:refund' transaction.id %}" class="btn btn-warning">Request refund</a>
+          {% endif %}
+          {% else %}
+          <div class="alert alert-info rounded-2xl">
+            <span>{{ transaction.provider|upper }} provider actions are not configured in this environment.</span>
+          </div>
+          {% endif %}
+          {% if transaction.payment_url %}
+          <a class="btn btn-primary" href="{{ transaction.payment_url }}">Open payment URL</a>
+          {% endif %}
+        </div>
+      </div>
+    </section>
+
+    <section class="card border border-base-300/70 bg-base-100/95 shadow-xl">
+      <div class="card-body gap-5">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[0.24em] text-base-content/45">Provider response</p>
+          <h3 class="mt-2 text-2xl font-semibold text-base-content">Raw payload for troubleshooting</h3>
+        </div>
+        <pre class="overflow-auto rounded-2xl border border-base-300/70 bg-neutral text-neutral-content p-4 text-xs leading-6">{{ transaction.provider_response|pprint }}</pre>
+      </div>
+    </section>
   </div>
 </div>
 {% endblock %}

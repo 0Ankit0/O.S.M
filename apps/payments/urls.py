@@ -4,9 +4,9 @@ from .views import (
     PaymentCreateView,
     PaymentRefreshStatusView,
     PaymentRefundCreateView,
+    PaymentsIndexView,
     PaymentTransactionDetailView,
     PaymentTransactionListView,
-    PaymentsIndexView,
 )
 
 app_name = "payments"

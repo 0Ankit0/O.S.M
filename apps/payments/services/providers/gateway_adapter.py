@@ -1,9 +1,8 @@
-import hmac
 import hashlib
+import hmac
 from typing import Any
 
 from django.conf import settings
-
 from finances.gateways.factory import PaymentGatewayFactory
 
 from .base import BasePaymentProviderAdapter
@@ -26,7 +25,7 @@ class GatewayBackedPaymentProviderAdapter(BasePaymentProviderAdapter):
 
     def verify_webhook_signature(self, *, payload: bytes, signature: str, timestamp: str) -> bool:
         secret = settings.PAYMENTS_WEBHOOK_SECRET.encode("utf-8")
-        signed_payload = f"{timestamp}.".encode("utf-8") + payload
+        signed_payload = f"{timestamp}.".encode() + payload
         expected = hmac.new(secret, signed_payload, hashlib.sha256).hexdigest()
         return hmac.compare_digest(expected, signature)
 

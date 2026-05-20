@@ -1,16 +1,14 @@
 from __future__ import annotations
 
-from datetime import timedelta, timezone as dt_timezone
+from datetime import UTC, timedelta
 
 from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.utils import timezone
-
 from orders.models import Order, OrderStatusEvent
 
 from payments.models import PaymentTransaction, PaymentWebhookEvent, RefundRequest
 from payments.services.providers import GatewayBackedPaymentProviderAdapter
-
 
 WEBHOOK_REPLAY_TOLERANCE = timedelta(minutes=5)
 
@@ -130,7 +128,7 @@ def request_refund(*, payment: PaymentTransaction, amount, reason: str, requeste
 
 @transaction.atomic
 def process_webhook(*, provider: str, payload: dict, raw_payload: bytes, signature: str, timestamp: str) -> tuple[PaymentWebhookEvent, bool]:
-    if abs(timezone.now() - timezone.datetime.fromtimestamp(int(timestamp), tz=dt_timezone.utc)) > WEBHOOK_REPLAY_TOLERANCE:
+    if abs(timezone.now() - timezone.datetime.fromtimestamp(int(timestamp), tz=UTC)) > WEBHOOK_REPLAY_TOLERANCE:
         raise ValidationError("Stale webhook timestamp.")
 
     adapter = GatewayBackedPaymentProviderAdapter(provider)

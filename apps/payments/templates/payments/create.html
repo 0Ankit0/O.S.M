@@ -1,17 +1,48 @@
-{% extends 'base_admin.html' %}
+{% extends base_template %}
 
 {% block title %}Create Payment Session{% endblock %}
 {% block page_title %}Create Stripe Payment Session{% endblock %}
 
 {% block content %}
-<div class="card bg-base-100 border border-base-300 shadow-sm max-w-2xl">
-  <div class="card-body">
-    <p class="text-sm opacity-80">Use this form to start an online Stripe payment for an existing order. For Cash on Delivery, place orders from checkout using COD.</p>
-    <form method="post" class="space-y-4">
-      {% csrf_token %}
-      {{ form.as_p }}
-      <button class="btn btn-primary" type="submit">Create Stripe session</button>
-    </form>
+<div class="space-y-6">
+  <section class="rounded-[2rem] border border-base-300/70 bg-gradient-to-br from-primary/12 via-base-100 to-secondary/10 p-6 shadow-xl sm:p-8">
+    <div class="max-w-3xl">
+      <p class="text-xs font-semibold uppercase tracking-[0.24em] text-base-content/45">Online payment setup</p>
+      <h2 class="mt-3 text-3xl font-semibold tracking-tight text-base-content">Launch a Stripe payment session for an existing order.</h2>
+      <p class="mt-3 text-base text-base-content/70">Select an unpaid order, confirm the provider, and optionally override the return URL for this checkout flow.</p>
+    </div>
+  </section>
+
+  <div class="card border border-base-300/70 bg-base-100/95 shadow-xl max-w-3xl">
+    <div class="card-body gap-5">
+      {% if form.non_field_errors %}
+      <div class="alert alert-error rounded-2xl">
+        <span>{{ form.non_field_errors }}</span>
+      </div>
+      {% endif %}
+      <form method="post" class="space-y-4">
+        {% csrf_token %}
+        <label class="form-control">
+          <span class="label"><span class="label-text font-medium">{{ form.order.label }}</span></span>
+          {{ form.order }}
+          {% if form.order.errors %}<span class="label"><span class="label-text-alt text-error">{{ form.order.errors|striptags }}</span></span>{% endif %}
+        </label>
+        <div class="grid gap-4 md:grid-cols-2">
+          <label class="form-control">
+            <span class="label"><span class="label-text font-medium">{{ form.provider.label }}</span></span>
+            {{ form.provider }}
+            {% if form.provider.errors %}<span class="label"><span class="label-text-alt text-error">{{ form.provider.errors|striptags }}</span></span>{% endif %}
+          </label>
+          <label class="form-control">
+            <span class="label"><span class="label-text font-medium">{{ form.return_url.label }}</span></span>
+            {{ form.return_url }}
+            {% if form.return_url.errors %}<span class="label"><span class="label-text-alt text-error">{{ form.return_url.errors|striptags }}</span></span>{% endif %}
+          </label>
+        </div>
+        <div class="rounded-2xl border border-base-300/70 bg-base-200/40 p-4 text-sm text-base-content/65">For local QA, this flow complements the cash-on-delivery checkout path and makes payment-specific redirects easier to test.</div>
+        <button class="btn btn-primary" type="submit">Create Stripe session</button>
+      </form>
+    </div>
   </div>
 </div>
 {% endblock %}

@@ -5,17 +5,17 @@ from datetime import timedelta
 from decimal import Decimal
 from unittest.mock import patch
 
+from catalog.models import Category, Product
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils import timezone
+from orders.models import Order
+from orders.services import CheckoutService
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from catalog.models import Category, Product
-from orders.models import Order
-from orders.services import CheckoutService
 from payments.models import PaymentTransaction, RefundRequest
 from payments.services import request_refund
 
@@ -46,7 +46,7 @@ class PaymentWebhookIdempotencyTests(TestCase):
     def _signed_headers(self, payload: dict):
         raw = json.dumps(payload).encode("utf-8")
         timestamp = str(int(timezone.now().timestamp()))
-        signed_payload = f"{timestamp}.".encode("utf-8") + raw
+        signed_payload = f"{timestamp}.".encode() + raw
         signature = hmac.new(settings.PAYMENTS_WEBHOOK_SECRET.encode("utf-8"), signed_payload, hashlib.sha256).hexdigest()
         return raw, {"HTTP_X_PAYMENT_SIGNATURE": signature, "HTTP_X_PAYMENT_TIMESTAMP": timestamp}
 
@@ -72,7 +72,7 @@ class PaymentWebhookIdempotencyTests(TestCase):
         payload = {"id": "evt_2", "type": "payment.failed", "transaction_id": "txn_123", "status": "failed"}
         raw = json.dumps(payload).encode("utf-8")
         timestamp = str(int((timezone.now() - timedelta(minutes=10)).timestamp()))
-        signed_payload = f"{timestamp}.".encode("utf-8") + raw
+        signed_payload = f"{timestamp}.".encode() + raw
         signature = hmac.new(settings.PAYMENTS_WEBHOOK_SECRET.encode("utf-8"), signed_payload, hashlib.sha256).hexdigest()
 
         url = reverse("payments_api:webhook", kwargs={"provider": "stripe"}, host="api")
