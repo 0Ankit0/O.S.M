@@ -1,11 +1,11 @@
 from django.contrib.auth import get_user_model
+from django.test import TestCase
 from django.urls import reverse
+from notifications.models import NotificationPreference
 from rest_framework import status
 from rest_framework.test import APIClient
-from django.test import TestCase
 
 from accounts.models import AccountAddress
-from notifications.models import NotificationPreference
 
 User = get_user_model()
 

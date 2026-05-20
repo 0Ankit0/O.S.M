@@ -2,7 +2,6 @@ from django.conf import settings
 from django.core.validators import RegexValidator
 from django.db import models
 
-
 postal_code_validator = RegexValidator(
     regex=r"^[A-Za-z0-9\- ]{3,12}$",
     message="Enter a valid postal code.",
@@ -27,4 +26,4 @@ class AccountAddress(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self) -> str:
-        return f"{self.user_id}:{self.line1}, {self.city}"
+        return f"{self.user.username}:{self.line1}, {self.city}"
