@@ -20,7 +20,13 @@ Restaurant OMS is a Django-based restaurant operations application with customer
 2. Install frontend build dependencies:
 
    ```bash
-   npm install
+   npm --prefix apps/theme/static_src install
+   ```
+
+   To rebuild the Tailwind/DaisyUI stylesheet on demand:
+
+   ```bash
+   npm run build-css-prod
    ```
 
 3. Ensure `.env` exists. The project auto-loads it from `config/settings.py`.

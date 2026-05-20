@@ -13,8 +13,9 @@
     "tailwindcss": "^4.1.18"
   },
   "scripts": {
-    "build-css": "tailwindcss -i ./static/css/tailwind.css -o ./static/css/output.css --watch",
-    "build-css-prod": "tailwindcss -i ./static/css/tailwind.css -o ./static/css/output.css --minify"
+    "install-theme-deps": "npm --prefix ./apps/theme/static_src install",
+    "build-css": "npm --prefix ./apps/theme/static_src run dev",
+    "build-css-prod": "npm --prefix ./apps/theme/static_src run build"
   },
   "peerDependencies": {
     "typescript": "^5"

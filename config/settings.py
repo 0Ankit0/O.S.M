@@ -14,6 +14,7 @@ import datetime
 import importlib
 import json
 import os
+import shutil
 import sys
 from pathlib import Path
 
@@ -507,4 +508,4 @@ INTERNAL_IPS = [
 ]
 
 # NPM executable path (for django-tailwind)
-NPM_BIN_PATH = env("NPM_BIN_PATH", default="/usr/local/bin/npm")
+NPM_BIN_PATH = env("NPM_BIN_PATH", default=shutil.which("npm") or "/usr/local/bin/npm")
