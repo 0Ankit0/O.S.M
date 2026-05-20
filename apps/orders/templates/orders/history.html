@@ -1,18 +1,71 @@
-{% extends 'base_user.html' %}
+{% extends base_template %}
 
 {% block title %}Order History{% endblock %}
 {% block page_title %}Order History{% endblock %}
 
 {% block content %}
-<h2>Your Orders</h2>
-<ul>
-  {% for order in orders %}
-  <li>
-    <a href="{% url 'orders:detail' order.pk %}">Order #{{ order.pk }}</a>
-    - {{ order.status }} - payment: {{ order.payment_status }} ({{ order.payment_gateway|default:"manual" }}) - {{ order.subtotal }}
-  </li>
-  {% empty %}
-  <li>No orders found.</li>
-  {% endfor %}
-</ul>
+<div class="space-y-6">
+  <section class="rounded-[2rem] border border-base-300/70 bg-gradient-to-br from-primary/12 via-base-100 to-secondary/10 p-6 shadow-xl sm:p-8">
+    <div class="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+      <div class="max-w-3xl">
+        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-base-content/45">Order timeline</p>
+        <h2 class="mt-3 text-3xl font-semibold tracking-tight text-base-content">Track every checkout attempt, payment state, and fulfillment change in one view.</h2>
+        <p class="mt-3 text-base text-base-content/70">Use the cards below to jump into a specific order and inspect its detailed status history.</p>
+      </div>
+      <div class="rounded-[1.5rem] border border-base-300/70 bg-base-100/90 px-5 py-4 shadow-lg">
+        <p class="text-sm uppercase tracking-[0.2em] text-base-content/45">Orders</p>
+        <p class="mt-2 text-3xl font-semibold text-base-content">{{ orders|length }}</p>
+      </div>
+    </div>
+  </section>
+
+  {% if orders %}
+  <div class="grid gap-5 xl:grid-cols-2">
+    {% for order in orders %}
+    <article class="card border border-base-300/70 bg-base-100/95 shadow-xl transition hover:-translate-y-1 hover:shadow-2xl">
+      <div class="card-body gap-4">
+        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.24em] text-base-content/45">Order #{{ order.pk }}</p>
+            <h3 class="mt-2 text-2xl font-semibold text-base-content">Placed {{ order.created_at|date:"M j, Y" }}</h3>
+            <p class="mt-1 text-sm text-base-content/60">Updated {{ order.updated_at|date:"M j, Y g:i A" }}</p>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <span class="badge {% if order.status == 'confirmed' or order.status == 'fulfilled' %}badge-success{% elif order.status == 'cancelled' or order.status == 'failed' %}badge-error{% elif order.status == 'pending_payment' %}badge-warning{% else %}badge-ghost{% endif %}">{{ order.get_status_display }}</span>
+            <span class="badge {% if order.payment_status == 'completed' %}badge-success{% elif order.payment_status == 'failed' %}badge-error{% elif order.payment_status == 'pending' %}badge-warning{% elif order.payment_status == 'refunded' %}badge-info{% else %}badge-ghost{% endif %}">{{ order.get_payment_status_display }}</span>
+          </div>
+        </div>
+
+        <div class="grid gap-3 md:grid-cols-3">
+          <div class="rounded-2xl border border-base-300/70 bg-base-200/40 px-4 py-3">
+            <p class="text-xs uppercase tracking-[0.2em] text-base-content/45">Subtotal</p>
+            <p class="mt-2 text-xl font-semibold text-base-content">{{ order.subtotal }}</p>
+          </div>
+          <div class="rounded-2xl border border-base-300/70 bg-base-200/40 px-4 py-3">
+            <p class="text-xs uppercase tracking-[0.2em] text-base-content/45">Payment</p>
+            <p class="mt-2 text-base font-medium text-base-content">{{ order.payment_gateway|default:"Manual"|upper }}</p>
+          </div>
+          <div class="rounded-2xl border border-base-300/70 bg-base-200/40 px-4 py-3">
+            <p class="text-xs uppercase tracking-[0.2em] text-base-content/45">Items</p>
+            <p class="mt-2 text-xl font-semibold text-base-content">{{ order.items.all|length }}</p>
+          </div>
+        </div>
+
+        <div class="card-actions justify-end">
+          <a href="{% url 'orders:detail' order.pk %}" class="btn btn-primary btn-sm">Open order details</a>
+        </div>
+      </div>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="rounded-[2rem] border border-dashed border-base-300 bg-base-100/80 p-10 text-center shadow-lg">
+    <h3 class="text-2xl font-semibold text-base-content">No orders yet</h3>
+    <p class="mt-3 text-base text-base-content/65">Place a checkout order to populate this history and follow payment progress over time.</p>
+    <div class="mt-5">
+      <a href="{% url 'orders:checkout' %}" class="btn btn-primary">Go to checkout</a>
+    </div>
+  </div>
+  {% endif %}
+</div>
 {% endblock %}

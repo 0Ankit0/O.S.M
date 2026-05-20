@@ -1,25 +1,111 @@
-{% extends 'base_user.html' %}
+{% extends base_template %}
 
 {% block title %}Order Detail{% endblock %}
 {% block page_title %}Order Detail{% endblock %}
 
 {% block content %}
-<h2>Order #{{ order.pk }}</h2>
-<p>Status: {{ order.status }}</p>
-<p>Payment: {{ order.payment_status }}{% if order.payment_gateway %} via {{ order.payment_gateway }}{% endif %}</p>
-<p>Subtotal: {{ order.subtotal }}</p>
+<div class="space-y-6">
+  <section class="rounded-[2rem] border border-base-300/70 bg-gradient-to-br from-primary/12 via-base-100 to-secondary/10 p-6 shadow-xl sm:p-8">
+    <div class="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+      <div class="max-w-3xl">
+        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-base-content/45">Order detail</p>
+        <h2 class="mt-3 text-3xl font-semibold tracking-tight text-base-content">Order #{{ order.pk }}</h2>
+        <p class="mt-3 text-base text-base-content/70">Created {{ order.created_at|date:"M j, Y g:i A" }} and last updated {{ order.updated_at|date:"M j, Y g:i A" }}.</p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <span class="badge badge-lg {% if order.status == 'confirmed' or order.status == 'fulfilled' %}badge-success{% elif order.status == 'cancelled' or order.status == 'failed' %}badge-error{% elif order.status == 'pending_payment' %}badge-warning{% else %}badge-ghost{% endif %}">{{ order.get_status_display }}</span>
+        <span class="badge badge-lg {% if order.payment_status == 'completed' %}badge-success{% elif order.payment_status == 'failed' %}badge-error{% elif order.payment_status == 'pending' %}badge-warning{% elif order.payment_status == 'refunded' %}badge-info{% else %}badge-ghost{% endif %}">{{ order.get_payment_status_display }}</span>
+      </div>
+    </div>
+  </section>
 
-<h3>Items</h3>
-<ul>
-  {% for item in order.items.all %}
-  <li>{{ item.product.name }} x {{ item.quantity }} @ {{ item.unit_price }}</li>
-  {% endfor %}
-</ul>
+  <div class="grid gap-4 lg:grid-cols-3">
+    <div class="rounded-[1.5rem] border border-base-300/70 bg-base-100/95 px-5 py-4 shadow-lg">
+      <p class="text-xs uppercase tracking-[0.2em] text-base-content/45">Subtotal</p>
+      <p class="mt-2 text-3xl font-semibold text-base-content">{{ order.subtotal }}</p>
+    </div>
+    <div class="rounded-[1.5rem] border border-base-300/70 bg-base-100/95 px-5 py-4 shadow-lg">
+      <p class="text-xs uppercase tracking-[0.2em] text-base-content/45">Gateway</p>
+      <p class="mt-2 text-xl font-semibold text-base-content">{{ order.payment_gateway|default:"Manual"|upper }}</p>
+    </div>
+    <div class="rounded-[1.5rem] border border-base-300/70 bg-base-100/95 px-5 py-4 shadow-lg">
+      <p class="text-xs uppercase tracking-[0.2em] text-base-content/45">Items</p>
+      <p class="mt-2 text-3xl font-semibold text-base-content">{{ order.items.all|length }}</p>
+    </div>
+  </div>
 
-<h3>Status Timeline</h3>
-<ul>
-  {% for event in order.status_events.all %}
-  <li>{{ event.created_at }}: {{ event.from_status }} → {{ event.to_status }} {{ event.note }}</li>
-  {% endfor %}
-</ul>
+  <div class="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+    <section class="card border border-base-300/70 bg-base-100/95 shadow-xl">
+      <div class="card-body gap-5">
+        <div class="flex items-center justify-between gap-3">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.24em] text-base-content/45">Items</p>
+            <h3 class="mt-2 text-2xl font-semibold text-base-content">What was included in this order</h3>
+          </div>
+          <a href="{% url 'orders:history' %}" class="btn btn-ghost btn-sm">Back to history</a>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="table table-zebra">
+            <thead>
+              <tr>
+                <th>Product</th>
+                <th>Quantity</th>
+                <th>Unit Price</th>
+                <th>Line Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for item in order.items.all %}
+              <tr>
+                <td class="font-medium">{{ item.product.name }}</td>
+                <td><span class="badge badge-outline">{{ item.quantity }}</span></td>
+                <td>{{ item.unit_price }}</td>
+                <td class="font-semibold">{{ item.line_total }}</td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="4" class="py-8 text-center text-base-content/60">No items were captured for this order.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section class="card border border-base-300/70 bg-base-100/95 shadow-xl">
+      <div class="card-body gap-5">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[0.24em] text-base-content/45">Status timeline</p>
+          <h3 class="mt-2 text-2xl font-semibold text-base-content">How the order progressed</h3>
+        </div>
+        <div class="space-y-3">
+          {% for event in order.status_events.all %}
+          <div class="rounded-2xl border border-base-300/70 bg-base-200/40 px-4 py-4">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <p class="font-medium text-base-content">{{ event.get_to_status_display }}</p>
+              <span class="text-sm text-base-content/60">{{ event.created_at|date:"M j, Y g:i A" }}</span>
+            </div>
+            <p class="mt-2 text-sm text-base-content/70">
+              {% if event.from_status %}
+              From {{ event.get_from_status_display }} to {{ event.get_to_status_display }}
+              {% else %}
+              Initial status set to {{ event.get_to_status_display }}
+              {% endif %}
+            </p>
+            {% if event.note %}<p class="mt-2 text-sm text-base-content/60">{{ event.note }}</p>{% endif %}
+          </div>
+          {% empty %}
+          <div class="rounded-2xl border border-dashed border-base-300 bg-base-200/40 p-6 text-sm text-base-content/65">No status events have been recorded for this order yet.</div>
+          {% endfor %}
+        </div>
+        {% if order.payment_transaction_id %}
+        <div class="card-actions justify-start">
+          <a href="{% url 'payments:detail' order.payment_transaction_id %}" class="btn btn-outline btn-sm">Open linked payment</a>
+        </div>
+        {% endif %}
+      </div>
+    </section>
+  </div>
+</div>
 {% endblock %}

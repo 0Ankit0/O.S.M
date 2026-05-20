@@ -1,6 +1,7 @@
 from decimal import Decimal
 from unittest.mock import patch
 
+from catalog.models import Category, Product
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.test import TestCase
@@ -8,7 +9,6 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from catalog.models import Category, Product
 from orders.models import Order
 from orders.services import CartService, CheckoutService, OrderStatusTransitionService
 

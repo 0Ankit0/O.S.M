@@ -1,14 +1,54 @@
-{% extends 'base_user.html' %}
+{% extends base_template %}
 {% load i18n %}
 
 {% block title %}{% trans 'Orders' %}{% endblock %}
 {% block page_title %}{% trans 'Orders' %}{% endblock %}
 
 {% block content %}
-<div class="card bg-base-100 border border-base-300 shadow-sm">
-  <div class="card-body">
-    <h2 class="card-title">{% trans 'Orders module' %}</h2>
-    <p>{% trans 'This area is scaffolded from the system design implementation playbook.' %}</p>
+<section class="rounded-[2rem] border border-base-300/70 bg-gradient-to-br from-primary/12 via-base-100 to-secondary/10 p-6 shadow-xl sm:p-8">
+  <div class="max-w-3xl">
+    <p class="text-xs font-semibold uppercase tracking-[0.24em] text-base-content/45">{% trans 'Order workflow' %}</p>
+    <h2 class="mt-3 text-3xl font-semibold tracking-tight text-base-content">{% trans 'Everything you need to place, review, and track orders.' %}</h2>
+    <p class="mt-3 text-base text-base-content/70">{% trans 'Use the cards below to move from cart review to checkout and into your full order history without leaving the same themed workspace.' %}</p>
   </div>
+</section>
+
+<div class="grid gap-5 md:grid-cols-3">
+  <a href="{% url 'orders:cart' %}" class="card border border-base-300/70 bg-base-100/90 shadow-xl transition hover:-translate-y-1 hover:shadow-2xl">
+    <div class="card-body gap-3">
+      <div class="flex items-center justify-between">
+        <span class="badge badge-outline">{% trans 'Step 1' %}</span>
+        <i data-lucide="shopping-cart" class="h-5 w-5 text-primary"></i>
+      </div>
+      <h2 class="card-title text-2xl">{% trans 'Cart' %}</h2>
+      <p class="text-base-content/70">{% trans 'Add menu items, update quantities, and review your subtotal before placing the order.' %}</p>
+    </div>
+  </a>
+  <a href="{% url 'orders:checkout' %}" class="card border border-base-300/70 bg-base-100/90 shadow-xl transition hover:-translate-y-1 hover:shadow-2xl">
+    <div class="card-body gap-3">
+      <div class="flex items-center justify-between">
+        <span class="badge badge-outline">{% trans 'Step 2' %}</span>
+        <i data-lucide="credit-card" class="h-5 w-5 text-primary"></i>
+      </div>
+      <h2 class="card-title text-2xl">{% trans 'Checkout' %}</h2>
+      <p class="text-base-content/70">{% trans 'Place a cash-on-delivery order or use online payment automatically when a provider is configured.' %}</p>
+    </div>
+  </a>
+  <a href="{% url 'orders:history' %}" class="card border border-base-300/70 bg-base-100/90 shadow-xl transition hover:-translate-y-1 hover:shadow-2xl">
+    <div class="card-body gap-3">
+      <div class="flex items-center justify-between">
+        <span class="badge badge-outline">{% trans 'Step 3' %}</span>
+        <i data-lucide="receipt-text" class="h-5 w-5 text-primary"></i>
+      </div>
+      <h2 class="card-title text-2xl">{% trans 'Order History' %}</h2>
+      <p class="text-base-content/70">{% trans 'Review current and previous orders with status timelines and payment context.' %}</p>
+    </div>
+  </a>
 </div>
+
+{% if not request.user.is_authenticated %}
+<div class="alert alert-info mt-4 rounded-[1.5rem] shadow-lg">
+  <span>{% trans 'Sign in to manage your cart and view your order history.' %}</span>
+</div>
+{% endif %}
 {% endblock %}

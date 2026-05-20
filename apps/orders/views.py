@@ -1,3 +1,5 @@
+from catalog.models import Product
+from core.mixins import RoleAwareBaseTemplateMixin
 from django.contrib import messages
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import ValidationError
@@ -6,30 +8,31 @@ from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse
 from django.views.generic import DetailView, ListView, TemplateView
 
-from catalog.models import Product
 from orders.forms import CartUpdateForm, CheckoutForm
 from orders.models import Order
 from orders.services import CartService, CheckoutService
 
 
-class OrdersIndexView(LoginRequiredMixin, TemplateView):
+class OrdersIndexView(LoginRequiredMixin, RoleAwareBaseTemplateMixin, TemplateView):
     template_name = "orders/index.html"
 
 
-class CartView(LoginRequiredMixin, TemplateView):
+class CartView(LoginRequiredMixin, RoleAwareBaseTemplateMixin, TemplateView):
     template_name = "orders/cart.html"
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        products = Product.objects.filter(active=True).order_by("name")
         context["cart"] = CartService.get_or_create_cart(self.request.user)
-        context["products"] = Product.objects.filter(active=True).order_by("name")
-        context["form"] = CartUpdateForm()
+        context["products"] = products
+        context["form"] = CartUpdateForm(products=products)
         return context
 
     def post(self, request, *args, **kwargs):
-        form = CartUpdateForm(request.POST)
+        products = Product.objects.filter(active=True).order_by("name")
+        form = CartUpdateForm(request.POST, products=products)
         if form.is_valid():
-            product = get_object_or_404(Product, id=form.cleaned_data["product_id"], active=True)
+            product = form.cleaned_data["product"]
             CartService.update_item(user=request.user, product=product, quantity=form.cleaned_data["quantity"])
             messages.success(request, "Cart updated.")
         else:
@@ -37,7 +40,7 @@ class CartView(LoginRequiredMixin, TemplateView):
         return redirect("orders:cart")
 
 
-class CheckoutView(LoginRequiredMixin, TemplateView):
+class CheckoutView(LoginRequiredMixin, RoleAwareBaseTemplateMixin, TemplateView):
     template_name = "orders/checkout.html"
 
     def get_context_data(self, **kwargs):
@@ -79,7 +82,7 @@ class CheckoutView(LoginRequiredMixin, TemplateView):
         return HttpResponseRedirect(reverse("orders:detail", kwargs={"pk": order.pk}))
 
 
-class OrderHistoryView(LoginRequiredMixin, ListView):
+class OrderHistoryView(LoginRequiredMixin, RoleAwareBaseTemplateMixin, ListView):
     model = Order
     template_name = "orders/history.html"
     context_object_name = "orders"
@@ -88,7 +91,7 @@ class OrderHistoryView(LoginRequiredMixin, ListView):
         return Order.objects.filter(user=self.request.user).prefetch_related("items__product")
 
 
-class OrderDetailView(LoginRequiredMixin, DetailView):
+class OrderDetailView(LoginRequiredMixin, RoleAwareBaseTemplateMixin, DetailView):
     model = Order
     template_name = "orders/detail.html"
     context_object_name = "order"

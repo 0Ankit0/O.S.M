@@ -1,4 +1,4 @@
-{% extends 'base_user.html' %}
+{% extends base_template %}
 
 {% block title %}Checkout{% endblock %}
 {% block page_title %}Checkout{% endblock %}
@@ -9,7 +9,11 @@
     <div class="card-body">
       <h2 class="card-title">Order Summary</h2>
       <p><strong>Subtotal:</strong> {{ cart.subtotal }}</p>
-      <p class="text-sm opacity-80">Choose Stripe for online payment or Cash on Delivery to pay on fulfillment.</p>
+      {% if form.payment_method.field.choices|length > 1 %}
+      <p class="text-sm opacity-80">Choose an available online payment option or Cash on Delivery to pay on fulfillment.</p>
+      {% else %}
+      <p class="text-sm opacity-80">Cash on Delivery is available in this environment. Online payment options appear automatically when a provider is configured.</p>
+      {% endif %}
     </div>
   </div>
 
@@ -19,13 +23,15 @@
       <form method="post" class="space-y-4">
         {% csrf_token %}
         <div class="form-control">
+          {% with selected_payment_method=form.payment_method.value|default:form.payment_method.field.initial %}
           {% for value, label in form.payment_method.field.choices %}
             <label class="label cursor-pointer justify-start gap-3">
               <input type="radio" name="payment_method" value="{{ value }}" class="radio radio-primary"
-                     {% if form.payment_method.value == value or (not form.payment_method.value and value == form.payment_method.field.initial) %}checked{% endif %}>
+                     {% if selected_payment_method == value %}checked{% endif %}>
               <span>{{ label }}</span>
             </label>
           {% endfor %}
+          {% endwith %}
         </div>
 
         <div class="grid gap-3 md:grid-cols-2">

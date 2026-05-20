@@ -4,6 +4,41 @@ import django.db.models.deletion
 from django.db import migrations, models
 
 
+LEGACY_STATUS_MAP = {
+    "cancelled": "failed",
+}
+
+
+def migrate_legacy_payment_transactions(apps, schema_editor):
+    Order = apps.get_model("orders", "Order")
+    LegacyPaymentTransaction = apps.get_model("finances", "PaymentTransaction")
+    PaymentTransaction = apps.get_model("payments", "PaymentTransaction")
+
+    legacy_transactions = LegacyPaymentTransaction.objects.in_bulk(
+        Order.objects.exclude(payment_transaction__isnull=True).values_list("payment_transaction_id", flat=True)
+    )
+
+    for order in Order.objects.exclude(payment_transaction__isnull=True).iterator():
+        legacy_transaction = legacy_transactions.get(order.payment_transaction_id)
+        if legacy_transaction is None:
+            continue
+
+        payment_transaction, _ = PaymentTransaction.objects.get_or_create(
+            order_id=order.id,
+            defaults={
+                "provider": legacy_transaction.gateway,
+                "status": LEGACY_STATUS_MAP.get(legacy_transaction.status, legacy_transaction.status),
+                "amount": legacy_transaction.amount,
+                "currency": legacy_transaction.currency,
+                "provider_transaction_id": legacy_transaction.gateway_transaction_id,
+                "provider_response": legacy_transaction.gateway_response,
+                "payment_url": "",
+            },
+        )
+        order.payment_transaction_record_id = payment_transaction.id
+        order.save(update_fields=["payment_transaction_record"])
+
+
 class Migration(migrations.Migration):
     dependencies = [
         ("payments", "0001_initial"),
@@ -11,9 +46,9 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterField(
+        migrations.AddField(
             model_name="order",
-            name="payment_transaction",
+            name="payment_transaction_record",
             field=models.ForeignKey(
                 blank=True,
                 null=True,
@@ -21,5 +56,15 @@ class Migration(migrations.Migration):
                 related_name="orders",
                 to="payments.paymenttransaction",
             ),
+        ),
+        migrations.RunPython(migrate_legacy_payment_transactions, migrations.RunPython.noop),
+        migrations.RemoveField(
+            model_name="order",
+            name="payment_transaction",
+        ),
+        migrations.RenameField(
+            model_name="order",
+            old_name="payment_transaction_record",
+            new_name="payment_transaction",
         ),
     ]

@@ -1,13 +1,13 @@
 from decimal import Decimal
 from unittest.mock import patch
 
+from catalog.models import Category, Product
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django_hosts.resolvers import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from catalog.models import Category, Product
 from orders.services import CartService
 
 User = get_user_model()

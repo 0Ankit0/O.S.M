@@ -1,30 +1,126 @@
-{% extends 'base_user.html' %}
+{% extends base_template %}
 
 {% block title %}Cart{% endblock %}
 {% block page_title %}Cart{% endblock %}
 
 {% block content %}
-<h2>Your Cart</h2>
-<p>Total items: {{ cart.total_quantity }} | Subtotal: {{ cart.subtotal }}</p>
+<div class="space-y-6">
+  <section class="rounded-[2rem] border border-base-300/70 bg-gradient-to-br from-primary/12 via-base-100 to-secondary/10 p-6 shadow-xl sm:p-8">
+    <div class="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+      <div class="max-w-2xl">
+        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-base-content/45">Basket overview</p>
+        <h2 class="mt-3 text-3xl font-semibold tracking-tight text-base-content">
+          {% if cart.total_quantity %}
+          Review the items queued for this order.
+          {% else %}
+          Start building the next order from active menu items.
+          {% endif %}
+        </h2>
+        <p class="mt-3 text-base text-base-content/70">Add products, adjust quantities, and keep the subtotal visible before heading into checkout.</p>
+      </div>
+      <div class="grid gap-3 sm:grid-cols-2">
+        <div class="rounded-[1.5rem] border border-base-300/70 bg-base-100/90 px-5 py-4 shadow-lg">
+          <p class="text-sm uppercase tracking-[0.2em] text-base-content/45">Items</p>
+          <p class="mt-2 text-3xl font-semibold text-base-content">{{ cart.total_quantity }}</p>
+        </div>
+        <div class="rounded-[1.5rem] border border-base-300/70 bg-base-100/90 px-5 py-4 shadow-lg">
+          <p class="text-sm uppercase tracking-[0.2em] text-base-content/45">Subtotal</p>
+          <p class="mt-2 text-3xl font-semibold text-base-content">{{ cart.subtotal }}</p>
+        </div>
+      </div>
+    </div>
+  </section>
 
-<form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Update cart</button>
-</form>
+  <div class="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+    <section class="card border border-base-300/70 bg-base-100/95 shadow-xl">
+      <div class="card-body gap-5">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[0.24em] text-base-content/45">Quick update</p>
+          <h3 class="mt-2 text-2xl font-semibold text-base-content">Add or adjust a product</h3>
+          <p class="mt-2 text-sm text-base-content/65">Set the quantity to `0` to remove an item from the basket.</p>
+        </div>
+        {% if form.non_field_errors %}
+        <div class="alert alert-error rounded-2xl">
+          <span>{{ form.non_field_errors }}</span>
+        </div>
+        {% endif %}
+        <form method="post" class="space-y-4">
+          {% csrf_token %}
+          <div class="grid gap-4 md:grid-cols-[minmax(0,1fr)_180px_auto] md:items-end">
+            <label class="form-control">
+              <span class="label"><span class="label-text font-medium">{{ form.product.label }}</span></span>
+              {{ form.product }}
+              {% if form.product.errors %}<span class="label"><span class="label-text-alt text-error">{{ form.product.errors|striptags }}</span></span>{% endif %}
+            </label>
+            <label class="form-control">
+              <span class="label"><span class="label-text font-medium">{{ form.quantity.label }}</span></span>
+              {{ form.quantity }}
+              {% if form.quantity.errors %}<span class="label"><span class="label-text-alt text-error">{{ form.quantity.errors|striptags }}</span></span>{% endif %}
+            </label>
+            <button type="submit" class="btn btn-primary w-full md:w-auto">Update cart</button>
+          </div>
+        </form>
+      </div>
+    </section>
 
-<ul>
-  {% for item in cart.items.all %}
-  <li>{{ item.product.name }} x {{ item.quantity }} = {{ item.line_total }}</li>
-  {% empty %}
-  <li>Cart is empty.</li>
-  {% endfor %}
-</ul>
+    <section class="card border border-base-300/70 bg-base-100/95 shadow-xl">
+      <div class="card-body gap-4">
+        <div>
+          <p class="text-xs font-semibold uppercase tracking-[0.24em] text-base-content/45">Active catalog</p>
+          <h3 class="mt-2 text-2xl font-semibold text-base-content">Available products</h3>
+        </div>
+        <div class="space-y-3">
+          {% for product in products %}
+          <div class="flex items-center justify-between rounded-2xl border border-base-300/70 bg-base-200/40 px-4 py-3">
+            <div>
+              <p class="font-medium text-base-content">{{ product.name }}</p>
+              <p class="text-sm text-base-content/60">Product ID {{ product.id }}</p>
+            </div>
+            <span class="badge badge-outline badge-lg">{{ product.price }}</span>
+          </div>
+          {% empty %}
+          <div class="rounded-2xl border border-dashed border-base-300 bg-base-200/40 p-6 text-sm text-base-content/65">No active products are available yet.</div>
+          {% endfor %}
+        </div>
+      </div>
+    </section>
+  </div>
 
-<h3>Available products</h3>
-<ul>
-  {% for product in products %}
-  <li>{{ product.name }} ({{ product.price }}) id={{ product.id }}</li>
-  {% endfor %}
-</ul>
+  <section class="card border border-base-300/70 bg-base-100/95 shadow-xl">
+    <div class="card-body gap-5">
+      <div>
+        <p class="text-xs font-semibold uppercase tracking-[0.24em] text-base-content/45">Line items</p>
+        <h3 class="mt-2 text-2xl font-semibold text-base-content">Current basket contents</h3>
+      </div>
+      {% if cart.items.all %}
+      <div class="overflow-x-auto">
+        <table class="table table-zebra">
+          <thead>
+            <tr>
+              <th>Product</th>
+              <th>Quantity</th>
+              <th>Unit Price</th>
+              <th>Line Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in cart.items.all %}
+            <tr>
+              <td class="font-medium">{{ item.product.name }}</td>
+              <td><span class="badge badge-outline">{{ item.quantity }}</span></td>
+              <td>{{ item.product.price }}</td>
+              <td class="font-semibold">{{ item.line_total }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="rounded-[1.5rem] border border-dashed border-base-300 bg-base-200/40 p-8 text-center text-base-content/65">
+        Your cart is empty. Add a product above to prepare the next order.
+      </div>
+      {% endif %}
+    </div>
+  </section>
+</div>
 {% endblock %}
