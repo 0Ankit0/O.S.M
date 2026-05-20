@@ -1,4 +1,4 @@
-{% extends "base/dashboard_base.html" %}
+{% extends base_template %}
 
 {% block title %}Notifications - Django Template{% endblock %}
 {% block page_title %}Notifications{% endblock %}
@@ -8,11 +8,10 @@
     <div class="card-body">
         <div class="flex justify-between items-center mb-6">
             <h2 class="card-title">All Notifications</h2>
-            <button hx-post="{% url 'notifications:mark_all_read' %}" 
-                    hx-swap="none"
-                    class="btn btn-ghost btn-sm">
-                Mark all as read
-            </button>
+            <form method="post" action="{% url 'notifications:mark_all_read' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-ghost btn-sm">Mark all as read</button>
+            </form>
         </div>
         
         <div class="space-y-3" id="notification-list">

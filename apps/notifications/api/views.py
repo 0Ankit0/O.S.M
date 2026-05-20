@@ -24,7 +24,7 @@ class NotificationViewSet(viewsets.ModelViewSet):
         notification = self.get_object()
         # Use property setter logic or direct field update?
         # Model property setter handles converting True to timezone.now()
-        notification.is_read = True 
+        notification.is_read = True
         notification.save()
         serializer = self.get_serializer(notification)
         return Response(serializer.data, status=status.HTTP_200_OK)
