@@ -24,6 +24,7 @@ from . import monitoring
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+environ.Env.read_env(BASE_DIR / ".env")
 
 env = environ.Env(
     DJANGO_DEBUG=(bool, False),
@@ -170,14 +171,30 @@ LOGGING = {
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 
-if IS_LOCAL_DEBUG:
-    # Use SQLite for local development
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
-        }
+DEFAULT_DB_CONNECTION = json.dumps(
+    {
+        "dbname": "postgres",
+        "username": "postgres",
+        "password": "postgres",
+        "host": "localhost",
+        "port": 5432,
     }
+)
+DB_CONNECTION = json.loads(env("DB_CONNECTION", default=DEFAULT_DB_CONNECTION))
+DB_PROXY_ENDPOINT = env("DB_PROXY_ENDPOINT", default=None)
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": DB_CONNECTION["dbname"],
+        "USER": DB_CONNECTION["username"],
+        "PASSWORD": DB_CONNECTION["password"],
+        "HOST": DB_PROXY_ENDPOINT or DB_CONNECTION["host"],
+        "PORT": DB_CONNECTION["port"],
+    }
+}
+
+if IS_LOCAL_DEBUG:
 
     # Use in-memory channel layer for local development
     CHANNEL_LAYERS = {
@@ -196,21 +213,6 @@ if IS_LOCAL_DEBUG:
 
     REDIS_CONNECTION = None
 else:
-    # Use PostgreSQL for production
-    DB_CONNECTION = json.loads(env("DB_CONNECTION"))
-    DB_PROXY_ENDPOINT = env("DB_PROXY_ENDPOINT", default=None)
-
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": DB_CONNECTION["dbname"],
-            "USER": DB_CONNECTION["username"],
-            "PASSWORD": DB_CONNECTION["password"],
-            "HOST": DB_PROXY_ENDPOINT or DB_CONNECTION["host"],
-            "PORT": DB_CONNECTION["port"],
-        },
-    }
-
     REDIS_CONNECTION = env("REDIS_CONNECTION")
 
     CHANNEL_LAYERS = {
@@ -379,7 +381,10 @@ SILENCED_SYSTEM_CHECKS = []
 if not STRIPE_CHECKS_ENABLED:
     SILENCED_SYSTEM_CHECKS.extend(["djstripe.C001", "djstripe.I001", "djstripe.I002"])
 
-STRIPE_ENABLED = "<CHANGE_ME>" not in STRIPE_LIVE_SECRET_KEY or "<CHANGE_ME>" not in STRIPE_TEST_SECRET_KEY
+if STRIPE_LIVE_MODE:
+    STRIPE_ENABLED = "<CHANGE_ME>" not in STRIPE_LIVE_SECRET_KEY and "<CHANGE_ME>" not in STRIPE_LIVE_PUBLIC_KEY
+else:
+    STRIPE_ENABLED = "<CHANGE_ME>" not in STRIPE_TEST_SECRET_KEY and "<CHANGE_ME>" not in STRIPE_TEST_PUBLIC_KEY
 
 # Khalti Payment Gateway Configuration
 KHALTI_ENABLED = env.bool("KHALTI_ENABLED", default=True)
