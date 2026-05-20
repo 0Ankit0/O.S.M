@@ -1,3 +1,5 @@
+import logging
+
 from django.contrib.auth import get_user_model
 from django.core.exceptions import PermissionDenied, ValidationError
 from django.db import transaction
@@ -9,6 +11,7 @@ from ..notifications import TenantInvitationEmail, send_tenant_invitation_notifi
 from ..tokens import tenant_invitation_token
 
 User = get_user_model()
+logger = logging.getLogger(__name__)
 
 
 def create_tenant_membership(
@@ -33,13 +36,16 @@ def create_tenant_membership(
         )
         # Use the membership ID directly instead of GraphQL global ID
         tenant_membership_id = str(membership.id)
-        TenantInvitationEmail(
-            to=user.email if user else invitee_email_address,
-            data={"tenant_membership_id": tenant_membership_id, "token": token},
-        ).send()
+        try:
+            TenantInvitationEmail(
+                to=user.email if user else invitee_email_address,
+                data={"tenant_membership_id": tenant_membership_id, "token": token},
+            ).send()
 
-        if user:
-            send_tenant_invitation_notification(membership, tenant_membership_id, token)
+            if user:
+                send_tenant_invitation_notification(membership, tenant_membership_id, token)
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Tenant invitation delivery failed for membership %s: %s", membership.id, exc)
 
     return membership
 

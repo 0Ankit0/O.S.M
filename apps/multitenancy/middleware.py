@@ -1,3 +1,6 @@
+from base64 import b64decode
+from binascii import Error as BinasciiError
+
 from django.utils.functional import SimpleLazyObject
 
 from .models import Tenant, TenantMembership
@@ -40,7 +43,7 @@ def get_current_user_role(tenant, user):
     return None
 
 
-class TenantMiddleware:
+class TenantUserRoleMiddleware:
     """
     Middleware for resolving the current tenant for REST API requests.
 
@@ -51,9 +54,47 @@ class TenantMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
 
+    @staticmethod
+    def _normalize_tenant_id(value):
+        if value in (None, ""):
+            return None
+
+        if not isinstance(value, str):
+            return value
+
+        if ":" in value:
+            return None
+
+        try:
+            decoded = b64decode(value).decode("utf-8")
+        except (BinasciiError, UnicodeDecodeError, ValueError):
+            return value
+
+        node_type, separator, tenant_id = decoded.partition(":")
+        if not separator:
+            return value
+        if node_type != "TenantType" or not tenant_id:
+            return None
+        return tenant_id
+
+    @classmethod
+    def _get_tenant_id_from_arguments(cls, args):
+        if not isinstance(args, dict):
+            return None
+
+        candidate = args.get("tenant_id") or args.get("id")
+        input_args = args.get("input")
+        if isinstance(input_args, dict):
+            candidate = input_args.get("tenant_id", candidate)
+
+        return cls._normalize_tenant_id(candidate)
+
     def __call__(self, request):
         # Extract tenant ID from header, query params, or session
-        tenant_id = request.headers.get("X-Tenant-ID") or request.GET.get("tenant_id") or request.session.get("tenant_id")
+        tenant_id = self._normalize_tenant_id(
+            request.headers.get("X-Tenant-ID") or request.GET.get("tenant_id") or request.session.get("tenant_id")
+        )
+        request.tenant_id = tenant_id
 
         if tenant_id:
             request.tenant = SimpleLazyObject(lambda: get_current_tenant(tenant_id))
@@ -64,3 +105,6 @@ class TenantMiddleware:
 
         response = self.get_response(request)
         return response
+
+
+TenantMiddleware = TenantUserRoleMiddleware

@@ -1,10 +1,7 @@
-import hashid_field
-from django.conf import settings
-from django.db import IntegrityError, models, transaction
-from django.db.models import Q, UniqueConstraint
-from django.utils.text import slugify
-
 from core.models import BaseModel
+from django.conf import settings
+from django.db import models
+from django.db.models import Q, UniqueConstraint
 
 from .. import constants
 from ..managers import TenantMembershipManager

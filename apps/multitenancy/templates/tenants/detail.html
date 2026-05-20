@@ -1,4 +1,4 @@
-{% extends "base/dashboard_base.html" %}
+{% extends base_template %}
 
 {% block title %}{{ tenant.name }} - Django Template{% endblock %}
 {% block page_title %}{{ tenant.name }}{% endblock %}
@@ -28,7 +28,7 @@
             <div class="card-body">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="card-title">Team Members</h3>
-                    {% if membership.role in 'owner,admin' %}
+                    {% if membership.role == 'OWNER' or membership.role == 'ADMIN' %}
                     <a href="{% url 'multitenancy:invite' tenant.id %}" class="btn btn-primary btn-sm">
                         <i data-lucide="user-plus" class="w-4 h-4"></i>
                         Invite
@@ -76,8 +76,11 @@
                                     {% endif %}
                                 </td>
                                 <td>
-                                    {% if membership.role == 'owner' and member.user != request.user %}
-                                    <button class="btn btn-ghost btn-xs text-error">Remove</button>
+                                    {% if membership.role == 'OWNER' and member.user != request.user %}
+                                    <form method="post" action="{% url 'multitenancy:remove_member' tenant.id member.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-ghost btn-xs text-error">Remove</button>
+                                    </form>
                                     {% endif %}
                                 </td>
                             </tr>
@@ -100,11 +103,14 @@
                         <i data-lucide="log-in" class="w-4 h-4"></i>
                         Switch to this org
                     </a>
-                    {% if membership.role == 'owner' %}
-                    <button class="btn btn-error btn-outline btn-block">
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                        Delete Organization
-                    </button>
+                    {% if membership.role == 'OWNER' %}
+                    <form method="post" action="{% url 'multitenancy:delete' tenant.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-error btn-outline btn-block" onclick="return confirm('Delete this organization and all of its memberships?')">
+                            <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            Delete Organization
+                        </button>
+                    </form>
                     {% endif %}
                 </div>
             </div>

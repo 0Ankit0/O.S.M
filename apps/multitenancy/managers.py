@@ -4,6 +4,9 @@ from .constants import TenantType, TenantUserRole
 
 
 class TenantManager(models.Manager):
+    def get_queryset(self):
+        return super().get_queryset().filter(is_active=True)
+
     def get_or_create_user_default_tenant(self, user):
         """
         Description:
@@ -33,19 +36,19 @@ class TenantMembershipManager(models.Manager):
         """
         Overrides the default get_queryset function to exclude invitations from the queryset.
         """
-        return super().get_queryset().filter(is_accepted=True)
+        return super().get_queryset().filter(is_active=True, is_accepted=True)
 
     def get_not_accepted(self):
         """
         Retrieves not accepted tenant invitations.
         """
-        return super().get_queryset().filter(is_accepted=False)
+        return super().get_queryset().filter(is_active=True, is_accepted=False)
 
-    def get_all(self, **kwargs):
+    def get_all(self):
         """
         Retrieves all tenants memberships.
         """
-        return super().get_queryset(**kwargs)
+        return super().get_queryset().filter(is_active=True)
 
     def associate_invitations_with_user(self, email, user):
         """

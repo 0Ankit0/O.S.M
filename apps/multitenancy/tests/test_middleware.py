@@ -1,11 +1,15 @@
+from base64 import b64encode
 from unittest.mock import Mock
 
 import pytest
-from graphql_relay import to_global_id
 
 from ..middleware import TenantUserRoleMiddleware, get_current_tenant, get_current_user_role
 
 pytestmark = pytest.mark.django_db
+
+
+def to_global_id(type_name, node_id):
+    return b64encode(f"{type_name}:{node_id}".encode("utf-8")).decode("utf-8")
 
 
 class TestGetTenantIdFromArguments:
