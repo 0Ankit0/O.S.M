@@ -1,9 +1,8 @@
 from decimal import Decimal
 
+from delivery.models import DeliveryAssignment
 from django.db.models import Count, F, Q, Sum
 from django.utils import timezone
-
-from delivery.models import DeliveryAssignment
 from orders.models import Order
 
 

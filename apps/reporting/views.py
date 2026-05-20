@@ -1,6 +1,6 @@
+from core.access import DashboardStaffRequiredMixin
 from django.views.generic import TemplateView
 
-from core.access import DashboardStaffRequiredMixin
 from reporting.services import KPIAggregationService
 
 
