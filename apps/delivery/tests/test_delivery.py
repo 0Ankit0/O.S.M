@@ -5,12 +5,12 @@ from django.core.exceptions import ValidationError
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
+from orders.models import Order
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from delivery.models import DeliveryAssignment, DeliveryZone
 from delivery.services import DeliveryServiceabilityService, DeliveryTransitionService
-from orders.models import Order
 
 User = get_user_model()
 
