@@ -1,4 +1,5 @@
-from django.conf import settings
+from pathlib import Path
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin
@@ -6,49 +7,50 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.generic import FormView, ListView
+from core.mixins import RoleAwareBaseTemplateMixin
+
 from . import forms, models
 
 
-class DocumentListView(LoginRequiredMixin, ListView):
+class DocumentListView(LoginRequiredMixin, RoleAwareBaseTemplateMixin, ListView):
     """List user's documents."""
-    template_name = 'documents/list.html'
+    template_name = 'content/documents/list.html'
     context_object_name = 'documents'
     login_url = reverse_lazy('iam:login')
-    
+
     def get_queryset(self):
         return models.Document.objects.filter(
             user=self.request.user
         ).order_by('-created_at')
-    
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['upload_form'] = forms.DocumentUploadForm()
         return context
 
 
-class DocumentUploadView(LoginRequiredMixin, FormView):
+class DocumentUploadView(LoginRequiredMixin, RoleAwareBaseTemplateMixin, FormView):
     """Upload a document."""
-    template_name = 'documents/upload.html'
+    template_name = 'content/documents/upload.html'
     form_class = forms.DocumentUploadForm
-    success_url = reverse_lazy('content:document_list')
+    success_url = reverse_lazy('content:documents_list')
     login_url = reverse_lazy('iam:login')
-    
+
     def form_valid(self, form):
+        uploaded_file = form.cleaned_data['file']
         document = models.Document.objects.create(
-            user=self.request.user, # Changed from created_by to match model in DocumentViewSet
-            file=form.cleaned_data['file'],
+            user=self.request.user,
+            title=form.cleaned_data.get('title') or Path(uploaded_file.name).stem,
+            file=uploaded_file,
         )
-        # Note: Frontend used created_by, DocumentViewSet uses user. 
-        # I should check models.Document definition. 
-        # DocumentViewSet uses user=self.request.user.
-        
+
         messages.success(self.request, 'Document uploaded successfully!')
-        
+
         if self.request.headers.get('HX-Request'):
-            return render(self.request, 'documents/partials/document_item.html', {
+            return render(self.request, 'content/documents/partials/document_item.html', {
                 'document': document
             })
-        
+
         return super().form_valid(form)
 
 
@@ -59,22 +61,22 @@ def document_delete(request, pk):
         models.Document, pk=pk, user=request.user
     )
     document.delete()
-    
+
     messages.success(request, 'Document deleted.')
-    
+
     if request.headers.get('HX-Request'):
         return HttpResponse('')
-    
-    return redirect('content:document_list')
+
+    return redirect('content:documents_list')
 
 
-class ProductListView(LoginRequiredMixin, ListView):
+class ProductListView(LoginRequiredMixin, RoleAwareBaseTemplateMixin, ListView):
     """List products (CMS items)."""
-    template_name = 'products/list.html'
+    template_name = 'content/products/list.html'
     context_object_name = 'products'
     paginate_by = 12
     login_url = reverse_lazy('iam:login')
-    
+
     def get_queryset(self):
         # Fetch published product items
         return models.ContentItem.objects.filter(
@@ -83,13 +85,13 @@ class ProductListView(LoginRequiredMixin, ListView):
         ).order_by('-created_at')
 
 
-class ProductCreateView(LoginRequiredMixin, FormView):
+class ProductCreateView(LoginRequiredMixin, RoleAwareBaseTemplateMixin, FormView):
     """Create a new product."""
-    template_name = 'products/form.html'
+    template_name = 'content/products/form.html'
     form_class = forms.ProductCreateForm
     success_url = reverse_lazy('content:products_list')
     login_url = reverse_lazy('iam:login')
-    
+
     def form_valid(self, form):
         # Create ContentItem for the product
         product_data = {
@@ -98,14 +100,14 @@ class ProductCreateView(LoginRequiredMixin, FormView):
             'description': form.cleaned_data['description'],
             'image': form.cleaned_data['image'],
         }
-        
+
         models.ContentItem.objects.create(
             content_type='product',
             external_id=f"product-{models.ContentItem.objects.count() + 1}", # Simple ID generation
             fields=product_data,
             is_published=True
         )
-        
+
         messages.success(self.request, 'Product created successfully!')
         return super().form_valid(form)
 
